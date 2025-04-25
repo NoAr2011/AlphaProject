@@ -30,8 +30,7 @@
   </ItemGroup>
   
   <Target Name="ESBuildBundle" AfterTargets="WebSharperCompile" Condition=" '$(Configuration)' == 'Release' ">
-    <Exec Command="npm install" />
-    <Exec Command="node ./esbuild.config.mjs" />
+    
   </Target>
 
 </Project>
