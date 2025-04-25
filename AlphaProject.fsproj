@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
+	
+	<WebSharperBundle>true</WebSharperBundle>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,9 +21,7 @@
 	<Content Include="CarStatus.html" CopyToPublishDirectory="Always" />
 	<Content Include="LoginPage.html" CopyToPublishDirectory="Always" />
 	<Content Include="UserRegist.html" CopyToPublishDirectory="Always" />
-	<Content Include="Scripts\WebSharper\**\*.*">
-    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	</Content>
+	
     <None Include="package.json" />
     <None Include="esbuild.config.mjs" />
     <None Include="vite.config.js" />
@@ -37,7 +37,8 @@
   </ItemGroup>
   
   <Target Name="ESBuildBundle" AfterTargets="WebSharperCompile" Condition=" '$(Configuration)' == 'Release' ">
-    
+    <Exec Command="npm install" />
+    <Exec Command="node ./esbuild.config.mjs" />
   </Target>
 
 </Project>
