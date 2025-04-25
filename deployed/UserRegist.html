@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${Title}</title>
+    <link rel="stylesheet" type="text/css" href="Content/style.css" />
+      
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container-fluid">
+        
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0" ws-hole="MenuBar"></ul>
+          <ul class="nav navbar-nav navbar-right">
+          <a id="LoginEmail" class="nav-link"></a>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <div class="container m-2 p-2">
+      <div ws-replace="Body">
+        <div ws-template="MainForm" class = "MainDiv">    
+		
+          <div class="inputUser">           
+			
+			<label for="firstName">First Name</label>
+			<input ws-var="FirstName" type="text" id="firstName" required >
+			
+			<label for="lastName">Last Name</label>
+			<input ws-var="LastName" type="text" id="lastName" required >
+
+			<label for="email">E-mail</label>
+			<input ws-var="Email" type="email" id="email" required >
+			
+			<label for="phone">Phone Number</label>
+			<input ws-var="Phone" type="text" id="phone" required >		
+						
+			<label for="city">City</label>
+			<input ws-var="City" type="text" id="city" required >
+			
+			<label for="street">Street</label>
+			<input ws-var="Street" type="text" id="street" required >
+			
+			<label for="houseNumber">House Number</label>
+			<input ws-var="HouseNumber" type="text" id="houseNumber" required >
+			
+			<label for="floorDoor">Floor/Door</label>
+			<input ws-var="FloorDoor" type="text" id="floorDoor" required >
+
+			<label for="password">Password</label>
+			<input ws-var="Password" type="password" id="password" required >
+						
+            <button ws-onclick="OnSubmit">Submit</button>
+			
+          </div>          
+        </div>
+      </div>
+    </div>
+   
+    <script ws-replace="scripts"></script>
+  </body>
+</html>
