@@ -7,10 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+	<Compile Include="StringValidation.fs" />
 	<Compile Include="EncodingData.fs" />
 	<Compile Include="DataModels.fs" />
     <Compile Include="DataBaseConnection.fs" />
-    <Compile Include="DatabaseSearch.fs" />       
+    <Compile Include="DatabaseSearch.fs" />           
 	<Compile Include="UpdatingDatabase.fs" />
 	<Compile Include="Remoting.fs" />
     <Compile Include="Client.fs" />

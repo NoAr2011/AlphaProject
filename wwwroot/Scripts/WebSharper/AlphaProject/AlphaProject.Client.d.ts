@@ -5,5 +5,6 @@ export function RegisterCar():Doc
 export function SingingIn():Doc
 export function UserRegistration():Doc
 export function Main():Doc
+export function sessionId():Var<string>
 export function password():Var<string>
 export function userEmail():Var<string>

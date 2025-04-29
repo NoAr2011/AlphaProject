@@ -4,11 +4,9 @@ open System.IO
 
 
 module UpdatingDatabase = 
-    
-    let connectionString = "Data Source=ProjectAlphaDatabase.db"
 
     let AddUser (newUser : UserData) =          
-        use connection = new SQLiteConnection(connectionString)
+        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()  
         
         let hashPassword = EncodingData.hashPassword(newUser.password)        
@@ -21,16 +19,16 @@ module UpdatingDatabase =
             let cmd = new SQLiteCommand(insertQuery, connection)
 
             
-            cmd.Parameters.AddWithValue("@family_name", newUser.family_name) |>ignore
-            cmd.Parameters.AddWithValue("@first_name", newUser.first_name) |>ignore
-            cmd.Parameters.AddWithValue("@password", hashPassword) |>ignore
+            cmd.Parameters.AddWithValue("@family_name", StringValidation.removeForbiddenCharacters newUser.family_name) |>ignore
+            cmd.Parameters.AddWithValue("@first_name", StringValidation.removeForbiddenCharacters newUser.first_name) |>ignore
+            cmd.Parameters.AddWithValue("@password",  hashPassword) |>ignore
             cmd.Parameters.AddWithValue("@permissions", newUser.permission) |>ignore
-            cmd.Parameters.AddWithValue("@phone_number", newUser.phone_number) |>ignore
-            cmd.Parameters.AddWithValue("@email", newUser.email) |>ignore
-            cmd.Parameters.AddWithValue("@city", newUser.city) |>ignore
-            cmd.Parameters.AddWithValue("@street", newUser.street) |>ignore
-            cmd.Parameters.AddWithValue("@house_number", newUser.house_number) |>ignore
-            cmd.Parameters.AddWithValue("@floor_door", newUser.floor_door) |>ignore
+            cmd.Parameters.AddWithValue("@phone_number", StringValidation.removeForbiddenCharacters newUser.phone_number) |>ignore
+            cmd.Parameters.AddWithValue("@email", StringValidation.removeForbiddenCharacters newUser.email) |>ignore
+            cmd.Parameters.AddWithValue("@city", StringValidation.removeForbiddenCharacters newUser.city) |>ignore
+            cmd.Parameters.AddWithValue("@street", StringValidation.removeForbiddenCharacters newUser.street) |>ignore
+            cmd.Parameters.AddWithValue("@house_number", StringValidation.removeForbiddenCharacters newUser.house_number) |>ignore
+            cmd.Parameters.AddWithValue("@floor_door", StringValidation.removeForbiddenCharacters newUser.floor_door) |>ignore
 
             cmd.ExecuteNonQuery() |>ignore           
             let returnValue = 1
@@ -47,7 +45,7 @@ module UpdatingDatabase =
             returnValue
 
     let InsertCarData (newCar :CarJoinedData) =   
-        use connection = new SQLiteConnection(connectionString)
+        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()        
         
         try           
@@ -57,10 +55,10 @@ module UpdatingDatabase =
 
             let cmd = new SQLiteCommand(insertQuery, connection)            
             
-            cmd.Parameters.AddWithValue("@car_licence", newCar.car_licence) |>ignore
-            cmd.Parameters.AddWithValue("@c_type", newCar.c_type) |>ignore
+            cmd.Parameters.AddWithValue("@car_licence", StringValidation.removeForbiddenCharacters newCar.car_licence) |>ignore
+            cmd.Parameters.AddWithValue("@c_type", StringValidation.removeForbiddenCharacters newCar.c_type) |>ignore
             cmd.Parameters.AddWithValue("@m_year", newCar.m_year) |>ignore
-            cmd.Parameters.AddWithValue("@manuf", newCar.manuf) |>ignore
+            cmd.Parameters.AddWithValue("@manuf", StringValidation.removeForbiddenCharacters newCar.manuf) |>ignore
             cmd.Parameters.AddWithValue("@user_id", newCar.user_id) |>ignore           
 
             cmd.ExecuteNonQuery() |>ignore           
@@ -70,7 +68,7 @@ module UpdatingDatabase =
            
         with
         | ex -> 
-            
+            connection.Close()
             let filePath = "errorLog.txt"
             
             File.WriteAllText(filePath, ex.Message)
@@ -78,7 +76,7 @@ module UpdatingDatabase =
             returnValue
         
     let InsertMalfuncSwitch carLicence (failureId) =                    
-        use connection = new SQLiteConnection(connectionString)
+        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()           
 
         let insertQuery ="Insert Into Failure_switch (car_licence, failure_id) Values (@car_licence, @failure_id)"
@@ -88,25 +86,21 @@ module UpdatingDatabase =
         File.WriteAllText(filePath, failureId)
 
         let cmd = new SQLiteCommand(insertQuery, connection)
-        cmd.Parameters.AddWithValue("@car_licence", carLicence) |>ignore
+        cmd.Parameters.AddWithValue("@car_licence", StringValidation.removeForbiddenCharacters carLicence) |>ignore
         cmd.Parameters.AddWithValue("@failure_id", failureId) |>ignore
         cmd.ExecuteNonQuery() |>ignore           
 
         connection.Close()       
 
     let InsertStatusSwitch carLicence (failureId) statusId =                    
-        use connection = new SQLiteConnection(connectionString)
+        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()  
         
         let insertQuery = "Insert Into Failure_Status_switch (car_licence, failure_id, status_id) 
-        Values(@car_licence, @failure_id, @status_id)"
-
-        let filePath = "statusLog.txt"
-            
-        File.WriteAllText(filePath, statusId)
+        Values(@car_licence, @failure_id, @status_id)"        
 
         let cmd = new SQLiteCommand(insertQuery, connection)
-        cmd.Parameters.AddWithValue("@car_licence", carLicence) |>ignore
+        cmd.Parameters.AddWithValue("@car_licence", StringValidation.removeForbiddenCharacters carLicence) |>ignore
         cmd.Parameters.AddWithValue("@failure_id", failureId) |>ignore
         cmd.Parameters.AddWithValue("@status_id", statusId) |>ignore
         cmd.ExecuteNonQuery() |>ignore           

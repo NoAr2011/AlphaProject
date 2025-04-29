@@ -33,8 +33,7 @@ module Templating =
             "Registration" => EndPoint.UserReg
             "Sign in" => EndPoint.SingIn
             "Register Car" => EndPoint.CarReg
-            "Car Status" => EndPoint.CarStatus   
-            
+            "Car Status" => EndPoint.CarStatus               
         ]
 
     let Main ctx action (title: string) (body: Doc list) =

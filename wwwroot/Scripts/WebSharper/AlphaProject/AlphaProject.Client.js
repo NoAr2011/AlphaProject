@@ -2,7 +2,7 @@ import { Create } from "../WebSharper.UI/WebSharper.UI.ListModel.js"
 import FSharpList from "../WebSharper.StdLib/Microsoft.FSharp.Collections.FSharpList`1.js"
 import Var from "../WebSharper.UI/WebSharper.UI.Var.js"
 import { StartImmediate, Delay, Bind, Zero, For, Combine } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
-import { GetUserPermission, GetCarData, GetStatusNames, GetFailureNames, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser } from "./AlphaProject.Server.js"
+import { GetUserPermission, ReturnSessionId, GetCarData, GetStatusNames, GetFailureNames, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser } from "./AlphaProject.Server.js"
 import Doc from "../WebSharper.UI/WebSharper.UI.Doc.js"
 import ProviderBuilder from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.ProviderBuilder.js"
 import Text from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Text.js"
@@ -12,10 +12,10 @@ import { listitem, mainform, mainform_1, mainform_2, mainform_3, mainform_4 } fr
 import { Get } from "../WebSharper.StdLib/WebSharper.Enumerator.js"
 import { isIDisposable } from "../WebSharper.StdLib/System.IDisposable.js"
 import Elt from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Elt.js"
+import { removeForbiddenCharacters } from "./AlphaProject.StringValidation.js"
 import TemplateHole from "../WebSharper.UI/WebSharper.UI.TemplateHole.js"
 import { IsNullOrWhiteSpace } from "../WebSharper.StdLib/Microsoft.FSharp.Core.StringModule.js"
 import { tryFind } from "../WebSharper.StdLib/Microsoft.FSharp.Collections.SeqModule.js"
-import { iter, ofArray } from "../WebSharper.StdLib/Microsoft.FSharp.Collections.ListModule.js"
 import $StartupCode_Client from "./$StartupCode_Client.js"
 export function CarStatus(){
   const carData=Create((item) => item.car_licence, FSharpList.Empty);
@@ -51,13 +51,13 @@ export function CarStatus(){
   const t=new ProviderBuilder("New_1");
   const this_1=(t.h.push(EventQ2(t.k, "onsend", () => t.i, () => {
     const _2=null;
-    StartImmediate(Delay(() => {
-      userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
-      return Bind(GetCarData(userEmail().Get(), userPermission.Get()), (a) => {
-        serverRespons.Set(String(a));
-        carData.AppendMany(a);
-        return Bind(GetStatusNames(), (a_1) => {
-          statusData.AppendMany(a_1);
+    StartImmediate(Delay(() => Bind(ReturnSessionId(), (a) => {
+      sessionId().Set(a);
+      return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?(userEmail().Set(globalThis.sessionStorage.getItem("userEmail")),Bind(GetCarData(userEmail().Get(), userPermission.Get()), (a_1) => {
+        serverRespons.Set(String(a_1));
+        carData.AppendMany(a_1);
+        return Bind(GetStatusNames(), (a_2) => {
+          statusData.AppendMany(a_2);
           setTimeout(() => {
             const selects=globalThis.document.querySelectorAll(".repair_dropdown");
             for(let i_1=0, _3=selects.length-1;i_1<=_3;i_1++){
@@ -82,8 +82,8 @@ export function CarStatus(){
           }, 0);
           return Zero();
         });
-      });
-    }), null);
+      })):Zero();
+    })), null);
   })),t);
   const b=(this_1.h.push(new Elt("listcontainer", L)),this_1);
   const p=CompleteHoles(b.k, b.h, []);
@@ -97,7 +97,7 @@ export function RegisterCar(){
   setTimeout(() => {
     userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
     globalThis.document.getElementById("LoginEmail").textContent=userEmail().Get();
-    const selectEl=globalThis.document.getElementById("failure");
+    const faulureSelect=globalThis.document.getElementById("failure");
     const _2=null;
     StartImmediate(Delay(() => Bind(GetFailureNames(), (a) => {
       failureData.AppendMany(a);
@@ -105,7 +105,7 @@ export function RegisterCar(){
         const opt=globalThis.document.createElement("option");
         opt.value=String(a_1.failure_name);
         opt.text=String(a_1.failure_name);
-        selectEl.appendChild(opt);
+        faulureSelect.appendChild(opt);
         return Zero();
       });
     })), null);
@@ -113,16 +113,17 @@ export function RegisterCar(){
   const t=new ProviderBuilder("New_1");
   const t_1=(t.h.push(EventQ2(t.k, "onsubmit", () => t.i, (e) => {
     const _2=null;
-    StartImmediate(Delay(() => {
+    StartImmediate(Delay(() => Bind(ReturnSessionId(), (a) => {
       userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
       globalThis.document.getElementById("LoginEmail").textContent=userEmail().Get();
-      return userEmail().Get()!=""&&userEmail().Get()!=null?Bind(CurrentUserId(password().Get(), userEmail().Get()), (a) => {
-        const c=TemplateHole.Value(e.Vars.Hole("licence")).Get();
-        const m=TemplateHole.Value(e.Vars.Hole("manuf")).Get();
+      sessionId().Set(a);
+      return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?Bind(CurrentUserId(password().Get(), userEmail().Get()), (a_1) => {
+        const c=removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("licence")).Get());
+        const m=removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("manuf")).Get());
         const newCar={
           car_licence:c, 
-          user_id:BigInt(a), 
-          c_type:TemplateHole.Value(e.Vars.Hole("c_type")).Get(), 
+          user_id:BigInt(a_1), 
+          c_type:removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("c_type")).Get()), 
           m_year:BigInt(Math.trunc(TemplateHole.Value(e.Vars.Hole("m_year")).Get())), 
           manuf:m, 
           failure:TemplateHole.Value(e.Vars.Hole("failure")).Get(), 
@@ -130,16 +131,17 @@ export function RegisterCar(){
           repair_status:"1"
         };
         const isNonEmpty=(s) =>!IsNullOrWhiteSpace(s);
-        let _3=isNonEmpty(newCar.car_licence)&&newCar.user_id>0n&&isNonEmpty(newCar.c_type)&&newCar.m_year>1900n&&isNonEmpty(newCar.manuf)&&isNonEmpty(newCar.failure)&&newCar.repair_costs>=0&&isNonEmpty(newCar.repair_status)?Bind(InsertCarData(newCar), (a_1) => {
-          serverRespons.Set(a_1);
-          return serverRespons.Get()=="Your Registration is comlete!"?(TemplateHole.Value(e.Vars.Hole("licence")).Set(""),TemplateHole.Value(e.Vars.Hole("manuf")).Set(""),TemplateHole.Value(e.Vars.Hole("c_type")).Set(""),TemplateHole.Value(e.Vars.Hole("m_year")).Set(0),TemplateHole.Value(e.Vars.Hole("failure")).Set(""),TemplateHole.Value(e.Vars.Hole("repair_cost")).Set(0),Zero()):Zero();
+        let _3=isNonEmpty(newCar.car_licence)&&newCar.user_id>0n&&isNonEmpty(newCar.c_type)&&newCar.m_year>1900n&&isNonEmpty(newCar.manuf)&&isNonEmpty(newCar.failure)&&newCar.repair_costs>=0&&isNonEmpty(newCar.repair_status)?Bind(InsertCarData(newCar), (a_2) => {
+          serverRespons.Set(a_2);
+          return Zero();
         }):(serverRespons.Set("Please fill in all fields."),Zero());
         return Combine(_3, Delay(() => {
           alert(serverRespons.Get());
+          globalThis.location.reload();
           return Zero();
         }));
       }):Zero();
-    }), null);
+    })), null);
   })),t);
   const b=(t_1.h.push(EventQ2(t_1.k, "onchange", () => t_1.i, (e) => {
     const failureName=TemplateHole.Value(e.Vars.Hole("failure")).Get();
@@ -155,7 +157,6 @@ export function RegisterCar(){
   return _1.Doc;
 }
 export function SingingIn(){
-  const serverRespons=Var.Create_1("");
   setTimeout(() => {
     userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
     globalThis.document.getElementById("LoginEmail").textContent=userEmail().Get();
@@ -165,17 +166,21 @@ export function SingingIn(){
     const _2=null;
     StartImmediate(Delay(() => {
       globalThis.sessionStorage.removeItem("userEmail");
-      password().Set(TemplateHole.Value(e.Vars.Hole("password")).Get());
-      userEmail().Set(TemplateHole.Value(e.Vars.Hole("email")).Get());
+      password().Set(removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("password")).Get()));
+      userEmail().Set(removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("email")).Get()));
       return Bind(LogingInToDatabase(password().Get(), userEmail().Get()), (a) => {
-        serverRespons.Set(a);
-        return Combine(a=="No user found"?(alert("No user found"),Zero()):(globalThis.sessionStorage.setItem("userEmail", userEmail().Get()),alert("Welcome "+String(serverRespons.Get())),Zero()), Delay(() => {
-          TemplateHole.Value(e.Vars.Hole("password")).Set("");
-          TemplateHole.Value(e.Vars.Hole("email")).Set("");
-          setTimeout(() => {
+        let _3;
+        if(a==null)_3=(alert("No user found"),Zero());
+        else {
+          const sid=a.$0;
+          _3=(sessionId().Set(sid),globalThis.sessionStorage.setItem("sessionId", sid),globalThis.sessionStorage.setItem("userEmail", userEmail().Get()),setTimeout(() => {
             userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
             globalThis.document.getElementById("LoginEmail").textContent=userEmail().Get();
-          }, 0);
+          }, 0),alert("Welcome: "+String(userEmail().Get())),Zero());
+        }
+        return Combine(_3, Delay(() => {
+          TemplateHole.Value(e.Vars.Hole("password")).Set("");
+          TemplateHole.Value(e.Vars.Hole("email")).Set("");
           return Zero();
         }));
       });
@@ -196,37 +201,31 @@ export function UserRegistration(){
   const b=(t.h.push(EventQ2(t.k, "onsubmit", () => t.i, (e) => {
     const _2=null;
     StartImmediate(Delay(() => {
-      const f=TemplateHole.Value(e.Vars.Hole("firstname")).Get();
-      const f_1=TemplateHole.Value(e.Vars.Hole("lastname")).Get();
-      const p_1=TemplateHole.Value(e.Vars.Hole("password")).Get();
-      const e_1=TemplateHole.Value(e.Vars.Hole("email")).Get();
+      const f=removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("firstname")).Get());
+      const f_1=removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("lastname")).Get());
+      const p_1=removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("password")).Get());
+      const e_1=removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("email")).Get());
       const newUser={
         main_id:"", 
         family_name:f_1, 
         first_name:f, 
         password:p_1, 
         permission:BigInt(4), 
-        phone_number:TemplateHole.Value(e.Vars.Hole("phone")).Get(), 
+        phone_number:removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("phone")).Get()), 
         email:e_1, 
-        city:TemplateHole.Value(e.Vars.Hole("city")).Get(), 
-        street:TemplateHole.Value(e.Vars.Hole("street")).Get(), 
-        house_number:TemplateHole.Value(e.Vars.Hole("housenumber")).Get(), 
-        floor_door:TemplateHole.Value(e.Vars.Hole("floordoor")).Get()
+        city:removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("city")).Get()), 
+        street:removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("street")).Get()), 
+        house_number:removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("housenumber")).Get()), 
+        floor_door:removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("floordoor")).Get())
       };
       const isNonEmpty=(s) =>!IsNullOrWhiteSpace(s);
       let _3=isNonEmpty(newUser.family_name)&&isNonEmpty(newUser.first_name)&&isNonEmpty(newUser.password)&&isNonEmpty(newUser.phone_number)&&isNonEmpty(newUser.email)&&isNonEmpty(newUser.city)&&isNonEmpty(newUser.street)&&isNonEmpty(newUser.house_number)&&isNonEmpty(newUser.floor_door)?Bind(RegisterNewUser(newUser), (a) => {
         serverRespons.Set(a);
-        if(serverRespons.Get()=="Your registration is complete!"){
-          const e_2=e.Vars;
-          iter((v) => {
-            v.Set("");
-          }, ofArray([TemplateHole.Value(e_2.Hole("firstname")), TemplateHole.Value(e_2.Hole("lastname")), TemplateHole.Value(e_2.Hole("email")), TemplateHole.Value(e_2.Hole("phone")), TemplateHole.Value(e_2.Hole("city")), TemplateHole.Value(e_2.Hole("street")), TemplateHole.Value(e_2.Hole("housenumber")), TemplateHole.Value(e_2.Hole("floordoor")), TemplateHole.Value(e_2.Hole("password"))]));
-          return Zero();
-        }
-        else return Zero();
+        return Zero();
       }):(serverRespons.Set("Please fill in all fields."),Zero());
       return Combine(_3, Delay(() => {
         alert(serverRespons.Get());
+        globalThis.location.reload();
         return Zero();
       }));
     }), null);
@@ -242,6 +241,9 @@ export function Main(){
   const i=new TemplateInstance(p[1], mainform_4(p[0]));
   let _1=(b.i=i,i);
   return _1.Doc;
+}
+export function sessionId(){
+  return $StartupCode_Client.sessionId;
 }
 export function password(){
   return $StartupCode_Client.password;

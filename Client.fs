@@ -20,37 +20,24 @@ module Templates =
 [<JavaScript>]
 module Client =
      let userEmail = Var.Create ""
-     let password = Var.Create ""     
+     let password = Var.Create ""    
+     let sessionId = Var.Create ""
 
-     let Main () =       
-        
+     let Main () =               
 
         Templates.MainTemplate.MainForm()           
                       
            .Doc()
 
      let UserRegistration () =        
-        let serverRespons = Var.Create ""
-
+        let serverRespons = Var.Create ""        
+        
         JS.SetTimeout (fun () ->
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
             let menuEmial = JS.Document.GetElementById("LoginEmail")
             menuEmial.TextContent <- userEmail.Value
-        ) 0 |> ignore    
+        ) 0 |> ignore   
 
-        let clearFields (e: Templates.UserRegTemplate.MainForm.Vars) =
-            [
-                e.FirstName
-                e.LastName
-                e.Email
-                e.Phone                
-                e.City
-                e.Street
-                e.HouseNumber
-                e.FloorDoor
-                e.Password
-            ]
-            |> List.iter (fun v -> v.Value <- "")
 
         Templates.UserRegTemplate.MainForm()            
             .OnSubmit(fun e ->                
@@ -58,20 +45,20 @@ module Client =
  
                     let newUser =          
                         {
-                        first_name = e.Vars.FirstName.Value
-                        family_name = e.Vars.LastName.Value
-                        password = e.Vars.Password.Value
-                        email = e.Vars.Email.Value
-                        phone_number = e.Vars.Phone.Value
+                        first_name = StringValidation.removeForbiddenCharacters e.Vars.FirstName.Value
+                        family_name = StringValidation.removeForbiddenCharacters e.Vars.LastName.Value
+                        password = StringValidation.removeForbiddenCharacters e.Vars.Password.Value
+                        email = StringValidation.removeForbiddenCharacters e.Vars.Email.Value
+                        phone_number = StringValidation.removeForbiddenCharacters e.Vars.Phone.Value
                         main_id = ""
-                        city = e.Vars.City.Value
-                        street = e.Vars.Street.Value
-                        house_number = e.Vars.HouseNumber.Value
-                        floor_door = e.Vars.FloorDoor.Value
+                        city = StringValidation.removeForbiddenCharacters e.Vars.City.Value
+                        street = StringValidation.removeForbiddenCharacters e.Vars.Street.Value
+                        house_number = StringValidation.removeForbiddenCharacters e.Vars.HouseNumber.Value
+                        floor_door = StringValidation.removeForbiddenCharacters e.Vars.FloorDoor.Value
                         permission = 4   
                         
-                    }    
-
+                    }                   
+                    
                     let isUserDataComplete (user: UserData) =
                         let isNonEmpty (s: string) = not (String.IsNullOrWhiteSpace s)    
                         
@@ -90,26 +77,23 @@ module Client =
                     if verifiValue then
 
                         let! res = Server.RegisterNewUser newUser
-                        serverRespons := res
-
-                        if serverRespons.Value = "Your registration is complete!" then
-                            clearFields(e.Vars)
+                        serverRespons := res                       
                             
                     else
                         let nullRespnse = "Please fill in all fields."
                         serverRespons.Value <- nullRespnse 
-
-                    JS.Alert(serverRespons.Value)                   
-                 
+                        
+                    JS.Alert(serverRespons.Value)      
+                    JS.Window.Location.Reload()
+                    
                 }
                 |> Async.StartImmediate
                 
             )
             .Doc()
 
-     let SingingIn () =
-        let serverRespons = Var.Create ""
-        
+     let SingingIn () =      
+
         JS.SetTimeout (fun () ->
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
             let menuEmial = JS.Document.GetElementById("LoginEmail")
@@ -120,29 +104,32 @@ module Client =
             .OnSubmit(fun e ->
                 async{
                     JS.Window.SessionStorage.RemoveItem("userEmail")
-                    password := e.Vars.Password.Value
-                    userEmail := e.Vars.Email.Value 
+                    password := StringValidation.removeForbiddenCharacters e.Vars.Password.Value
+                    userEmail := StringValidation.removeForbiddenCharacters e.Vars.Email.Value 
 
-                    let! res = Server.LogingInToDatabase password.Value userEmail.Value                    
+                    let! result = Server.LogingInToDatabase password.Value userEmail.Value                    
 
-                    serverRespons := res
+                    match result with
+                    | Some sid ->
+                        sessionId := sid                        
+                        JS.Window.SessionStorage.SetItem("sessionId", sid)                            
 
-                    if res = "No user found" then
-                        JS.Alert("No user found") 
+                        JS.Window.SessionStorage.SetItem("userEmail", userEmail.Value)                                             
 
-                    else
-                        JS.Window.SessionStorage.SetItem("userEmail", userEmail.Value)
-                        JS.Alert($"Welcome {serverRespons.Value}") 
+                        JS.SetTimeout (fun () ->
+                            userEmail := JS.Window.SessionStorage.GetItem("userEmail")
+                            let menuEmial = JS.Document.GetElementById("LoginEmail")
+                            menuEmial.TextContent <- userEmail.Value
+                        ) 0 |> ignore                        
+
+                        let welcomeMsg = $"Welcome: {userEmail.Value}"
+                        JS.Alert(welcomeMsg)
+                    | None ->
+                        JS.Alert("No user found")                                 
 
                     e.Vars.Password.Value <-""
-                    e.Vars.Email.Value <-""                 
-
-                    JS.SetTimeout (fun () ->
-                        userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-                        let menuEmial = JS.Document.GetElementById("LoginEmail")
-                        menuEmial.TextContent <- userEmail.Value
-                    ) 0 |> ignore 
-
+                    e.Vars.Email.Value <-""              
+                                        
                 }
                 |> Async.StartImmediate
 
@@ -152,13 +139,15 @@ module Client =
      let RegisterCar () =     
         
         let failureData: FailureCosts = ListModel.Create(fun item -> item.failure_name)[] 
-        let serverRespons = Var.Create ""      
+        let serverRespons = Var.Create ""
+        
+        JS.SetTimeout (fun () ->     
 
-        JS.SetTimeout (fun () ->                          
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
             let menuEmial = JS.Document.GetElementById("LoginEmail")
             menuEmial.TextContent <- userEmail.Value
-            let selectEl = JS.Document.GetElementById("failure") :?> HTMLSelectElement           
+
+            let faulureSelect = JS.Document.GetElementById("failure") :?> HTMLSelectElement           
 
             async{
                     let! failureOptions = Server.GetFailureNames()
@@ -169,28 +158,34 @@ module Client =
                         let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
                         opt.Value <- value.failure_name.ToString()
                         opt.Text <- value.failure_name.ToString()
-                        selectEl.AppendChild(opt) |> ignore
+                        faulureSelect.AppendChild(opt) |> ignore
                     }
                     |> Async.StartImmediate
             ) 0 |> ignore         
 
         Templates.AddCarTemplate.MainForm()            
             .OnSubmit(fun e ->
-                async{
+                async{     
+                    let! sessionIdResponse = Server.ReturnSessionId()                          
+                    
                     userEmail := JS.Window.SessionStorage.GetItem("userEmail")
                     let menuEmial = JS.Document.GetElementById("LoginEmail")
                     menuEmial.TextContent <- userEmail.Value 
 
-                    if userEmail.Value <> "" && userEmail.Value <> null then
+                    sessionId.Value <- sessionIdResponse
+
+                    let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
+                     
+                    if sessionChek = sessionId.Value then                                           
 
                         let! userId = Server.CurrentUserId password.Value userEmail.Value
 
                         let newCar : CarJoinedData =
                             {                        
-                            car_licence = e.Vars.licence.Value
+                            car_licence = StringValidation.removeForbiddenCharacters e.Vars.licence.Value
                             user_id = int64 userId
-                            manuf = e.Vars.manuf.Value
-                            c_type = e.Vars.c_type.Value
+                            manuf = StringValidation.removeForbiddenCharacters e.Vars.manuf.Value
+                            c_type = StringValidation.removeForbiddenCharacters e.Vars.c_type.Value
                             m_year = int64 e.Vars.m_year.Value                         
                             failure = e.Vars.failure.Value
                             repair_costs = e.Vars.repair_cost.Value
@@ -213,21 +208,14 @@ module Client =
 
                         if verifiValue then
                             let! res = Server.InsertCarData newCar
-                            serverRespons := res
-
-                            if serverRespons.Value = "Your Registration is comlete!" then
-                                e.Vars.licence.Value <- ""                        
-                                e.Vars.manuf.Value <- ""
-                                e.Vars.c_type.Value <- ""
-                                e.Vars.m_year.Value <- 0.0                         
-                                e.Vars.failure.Value <- ""
-                                e.Vars.repair_cost.Value <- 0
+                            serverRespons := res                            
 
                         else
                             let nullRespnse = "Please fill in all fields."
                             serverRespons.Value <- nullRespnse 
 
-                        JS.Alert(serverRespons.Value)                     
+                        JS.Alert(serverRespons.Value)   
+                        JS.Window.Location.Reload()
 
                 }
                 |> Async.StartImmediate
@@ -236,7 +224,7 @@ module Client =
            .OnChange(fun e ->               
                  
                  let failureName = e.Vars.failure.Value               
-
+                 
                  let failureCost =
                     failureData |> Seq.tryFind (fun item -> item.failure_name = failureName)
 
@@ -260,8 +248,8 @@ module Client =
         let statusData : RepairStatuses = ListModel.Create (fun item -> item.status_name) []
         let serverRespons = Var.Create ""      
         let userPermission = Var.Create ""
-                 
-        JS.SetTimeout (fun () ->
+        
+        JS.SetTimeout (fun () ->            
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
             let menuEmial = JS.Document.GetElementById("LoginEmail")
             menuEmial.TextContent <- userEmail.Value
@@ -273,43 +261,49 @@ module Client =
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
 
-                    }
-                    |> Async.StartImmediate
-        
+                }
+                |> Async.StartImmediate       
            
         ) 0 |> ignore         
         
         Templates.CStatusTemplate.MainForm()
             .OnSend(fun e ->
-                async {                                
+                async {     
+                
+                    let! sessionIdResponse = Server.ReturnSessionId()  
+                    sessionId.Value <- sessionIdResponse
+
+                    let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
+                     
+                    if sessionChek = sessionId.Value then 
                     
-                    userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-                    let! res = Server.GetCarData userEmail.Value userPermission.Value
-                    serverRespons := res.ToString()
-                    carData.AppendMany res
+                        userEmail := JS.Window.SessionStorage.GetItem("userEmail")
+                        let! res = Server.GetCarData userEmail.Value userPermission.Value
+                        serverRespons := res.ToString()
+                        carData.AppendMany res
 
-                    let! statusOptions = Server.GetStatusNames()                    
+                        let! statusOptions = Server.GetStatusNames()                    
 
-                    statusData.AppendMany statusOptions
+                        statusData.AppendMany statusOptions
 
-                    JS.SetTimeout (fun () ->
-                        let selects = JS.Document.QuerySelectorAll(".repair_dropdown")                       
+                        JS.SetTimeout (fun () ->
+                            let selects = JS.Document.QuerySelectorAll(".repair_dropdown")                       
 
-                        for i = 0 to selects.Length - 1 do
-                            let selectEl = selects.[i] :?> HTMLSelectElement   
+                            for i = 0 to selects.Length - 1 do
+                                let selectEl = selects.[i] :?> HTMLSelectElement   
                             
-                            if userPermission.Value <> "2" then
-                                selectEl.Disabled <- true
-                            else
-                                selectEl.Disabled <- false 
+                                if userPermission.Value <> "2" then
+                                    selectEl.Disabled <- true
+                                else
+                                    selectEl.Disabled <- false 
                                                        
-                            for value in statusData do  
-                                let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
-                                opt.Value <- value.status_name
-                                opt.Text <- value.status_name                                  
-                                selectEl.Append(opt) |>ignore                             
+                                for value in statusData do  
+                                    let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
+                                    opt.Value <- value.status_name
+                                    opt.Text <- value.status_name                                  
+                                    selectEl.Append(opt) |>ignore                             
 
-                        ) 0 |> ignore 
+                            ) 0 |> ignore 
                     
                 }
                 |> Async.StartImmediate

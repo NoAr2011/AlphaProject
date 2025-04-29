@@ -3,8 +3,8 @@
 open System.Data.SQLite
 
 module DataBaseConnection =
-    //let dbFile = "ProjectAlphaDatabase.db"
-    let dbFile = "ProjectAlphaDatabase.db"
+    
+    let dbFile = "Data Source=ProjectAlphaDatabase.db"
 
     let connectToDatabase () =     
         use connection = new SQLiteConnection($"Data Source={dbFile}")
