@@ -1,19 +1,28 @@
-# AutoTrack – Vehicle Service Registration System
+# CarTrack – Vehicle Service Registration System
 
-**AutoTrack** is a web-based application designed to streamline the vehicle service process. Users can register, add their cars, and monitor service progress conveniently from their browser.
+**CarTrack** is a web-based application designed to streamline the vehicle service process. Users can register, add their vehicles, and conveniently monitor service progress from their browser.
+
+The application is built using the **WebSharper** client-server model with **HTML templates**. Data is stored using **SQLite**.
+
+---
+
+## Live Demo
+
+Try the application live: [Hosted on Azure]https://autotrack-g3fqakhcddbzhqf3.northeurope-01.azurewebsites.net/
+*Note: This is a preview version — some features may still be under development.*
 
 ---
 
 ## Project Status: In Development
 
-This application is **still under development** and is expected to be fully functional by the **end of the semester**.
+This application is currently in development and is expected to be feature-complete by the **end of the semester**.
 
 ---
 
 ## Currently Available Features
 
 - New user registration  
-- Vehicle registration for users  
+- Vehicle registration linked to user accounts  
 - Viewing the repair status of registered vehicles  
 
 ---
@@ -21,18 +30,20 @@ This application is **still under development** and is expected to be fully func
 ## Features Under Construction
 
 - Updating vehicle status by service staff  
-- Setting or updating the repair costs of each vehicle  
+- Setting or updating repair costs for each vehicle  
 
-These features are actively being developed and will be available in future updates.
+These features are actively being developed and will be included in upcoming updates.
 
 ---
 
 ## Estimated Completion
 
-The core functionality is scheduled to be completed by **semester's end**.
+The core functionality is planned to be completed by **the end of the semester**.
 
 ---
 
-## Stay Connected
+## Stay Updated
 
-Further updates and improvements will be announced as the project progresses. Thank you for your interest and support!
+Further updates and improvements will be shared as the project progresses.  
+Thank you for your interest and support!
+
