@@ -52,6 +52,6 @@ Thank you for your interest and support!
 ## Some Pictures of the app
 
 
-![Main Page](Main page.png)
-![User Registration Page](User Registration page.png)
-![Sign in Page](Sign in page.png)
+![Main Page](Main_page.png)
+![User Registration Page](User_Registration_page.png)
+![Sign in Page](Sign_in_page.png)
