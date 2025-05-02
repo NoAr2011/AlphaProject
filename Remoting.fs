@@ -106,8 +106,8 @@ module Server =
 
         let returnValue =
             match serverResponse with                    
-            | a when a > 0 ->  "Your registration is complete!"
-            | _ ->  "Something went wrong!"
+            | a when a > 0 ->  "Vehicle registration is complete!"
+            | _ ->  "This license number already exists."
         async
             {
             return returnValue   
@@ -148,11 +148,17 @@ module Server =
 
 
     [<Rpc>]
-    let UpdateUser (currentUser: UserData) =        
+    let UpdateUser (currentUser: UserData) =  
+    
+        let dataBaseResponse = UpdatingDatabase.UpdateUserData currentUser
+        let returnValue =
+            match dataBaseResponse with                    
+            | a when a > 0 ->  "Data successfully updated."
+            | _ ->  "Something went wrong!"
         
         async{
-            let dataBaseResponse = UpdatingDatabase.UpdateUserData currentUser
-            return dataBaseResponse
+            
+            return returnValue
         
         }
 

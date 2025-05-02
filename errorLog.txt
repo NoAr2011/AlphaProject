@@ -1,0 +1,2 @@
+constraint failed
+UNIQUE constraint failed: Cars_table.car_licence

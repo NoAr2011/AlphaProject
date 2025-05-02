@@ -2,7 +2,7 @@ import FSharpAsync from "../WebSharper.StdLib/Microsoft.FSharp.Control.FSharpAsy
 import { FSharpList_T } from "../WebSharper.StdLib/Microsoft.FSharp.Collections.FSharpList`1"
 import { FSharpOption } from "../WebSharper.StdLib/Microsoft.FSharp.Core.FSharpOption`1"
 export function UpdateCarStatus(carLicence:string, carStatus:string):void
-export function UpdateUser(currentUser:{main_id:string,family_name:string,first_name:string,password:string,permission:BigInt,phone_number:string,email:string,city:string,street:string,house_number:string,floor_door:string}):FSharpAsync<number>
+export function UpdateUser(currentUser:{main_id:string,family_name:string,first_name:string,password:string,permission:BigInt,phone_number:string,email:string,city:string,street:string,house_number:string,floor_door:string}):FSharpAsync<string>
 export function GetUserPermission(userEmail:string):FSharpAsync<string>
 export function GetStatusNames():FSharpAsync<FSharpList_T<{main_id:BigInt,status_name:string,status_desc:string}>>
 export function GetFailureNames():FSharpAsync<FSharpList_T<{main_id:BigInt,failure_name:string,repair_desc:string,repair_costs:number}>>
