@@ -7,7 +7,7 @@ open System.Text
 module DatabaseSearch =     
 
     let SearchForUsers (password : string) email : string = 
-        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()       
         
         let hashPassword = EncodingData.hashPassword(password) 
@@ -15,7 +15,7 @@ module DatabaseSearch =
         let sqlQuery = $"Select first_name from User_table Where password = @password and email = @email"
                
 
-        let cmd = new SQLiteCommand(sqlQuery, connection)   
+        use cmd = new SQLiteCommand(sqlQuery, connection)   
         cmd.Parameters.AddWithValue("@password", hashPassword) |> ignore
         cmd.Parameters.AddWithValue("@email", StringValidation.removeForbiddenCharacters email) |> ignore
         let reader = cmd.ExecuteScalar()                           
@@ -32,7 +32,7 @@ module DatabaseSearch =
             currentUser
         with
         | ex -> 
-            
+            connection.Close()
             let filePath = "errorLog.txt"
             
             File.WriteAllText(filePath, ex.Message)
@@ -42,7 +42,7 @@ module DatabaseSearch =
 
          
     let GetCarData userEMail =        
-        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()        
         
           
@@ -55,7 +55,7 @@ module DatabaseSearch =
                 Left Join Repair_statuses s On s.main_id = fss.status_id Where 
                 u.email = @email"""       
 
-        let cmd = new SQLiteCommand(sqlQuery, connection)  
+        use cmd = new SQLiteCommand(sqlQuery, connection)  
         cmd.Parameters.AddWithValue("@email", StringValidation.removeForbiddenCharacters userEMail) |> ignore
         let reader = cmd.ExecuteReader()
 
@@ -93,12 +93,12 @@ module DatabaseSearch =
         
 
     let GetUserId email : string =     
-        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()        
 
         let sqlQuery = $"Select main_id from User_table Where email = @email"
 
-        let cmd = new SQLiteCommand(sqlQuery, connection)    
+        use cmd = new SQLiteCommand(sqlQuery, connection)    
         cmd.Parameters.AddWithValue("@email", StringValidation.removeForbiddenCharacters email) |> ignore
         let reader = cmd.ExecuteScalar()                          
 
@@ -109,12 +109,12 @@ module DatabaseSearch =
         currentUserId
 
     let GetMalfunctions () =     
-        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()        
 
         let sqlQuery = "Select * from Failure_costs"               
 
-        let cmd = new SQLiteCommand(sqlQuery, connection)        
+        use cmd = new SQLiteCommand(sqlQuery, connection)        
         let reader = cmd.ExecuteReader()                       
 
         let rec GetDataTable tableList =      
@@ -139,13 +139,13 @@ module DatabaseSearch =
         failureList
 
     let GetcarStatuses () = 
-        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()        
 
         let sqlQuery = "Select * from Repair_statuses"
                
 
-        let cmd = new SQLiteCommand(sqlQuery, connection)        
+        use cmd = new SQLiteCommand(sqlQuery, connection)        
         let reader = cmd.ExecuteReader()                       
 
         let rec GetDataTable tableList =      
@@ -169,12 +169,12 @@ module DatabaseSearch =
         statusList
 
     let GetMainIdFromTable tableName (columnName) searchedBy =
-       let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+       use connection = new SQLiteConnection(DataBaseConnection.dbFile)
        connection.Open()        
 
        let sqlQuery = $"Select main_id from {tableName} Where {columnName} = @searched"
 
-       let cmd = new SQLiteCommand(sqlQuery, connection)  
+       use cmd = new SQLiteCommand(sqlQuery, connection)  
        cmd.Parameters.AddWithValue("@searched", searchedBy) |> ignore
        let reader = cmd.ExecuteScalar()                          
 
@@ -185,12 +185,12 @@ module DatabaseSearch =
        mainId
 
     let GetPermision (userEMail:string) : string =        
-        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()    
 
         let sqlQuery = $"Select permissions from User_table Where email = @Email"
 
-        let cmd = new SQLiteCommand(sqlQuery, connection)  
+        use cmd = new SQLiteCommand(sqlQuery, connection)  
         cmd.Parameters.AddWithValue("@Email", StringValidation.removeForbiddenCharacters userEMail) |> ignore
         let reader = cmd.ExecuteScalar()                          
         
@@ -203,7 +203,7 @@ module DatabaseSearch =
 
 
     let GetAllCarData =        
-        let connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()        
         
           
@@ -215,7 +215,7 @@ module DatabaseSearch =
                 LEFT JOIN Failure_status_switch fss ON fss.car_licence = c.car_licence 
                 LEFT JOIN Repair_statuses s ON s.main_id = fss.status_id"""       
 
-        let cmd = new SQLiteCommand(sqlQuery, connection)  
+        use cmd = new SQLiteCommand(sqlQuery, connection)  
         
         let reader = cmd.ExecuteReader()
 
@@ -250,5 +250,37 @@ module DatabaseSearch =
         let allCars = GetDataTable emptyCars                     
         connection.Close()
         allCars
+
+    let SearchForUsersData (email : string) : UserData = 
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        connection.Open()       
+
+        let sqlQuery = $"Select family_name, first_name, phone_number, city, street, house_number, floor_door from User_table Where email = @Email"
+
+        use cmd = new SQLiteCommand(sqlQuery, connection)  
+        cmd.Parameters.AddWithValue("@Email", StringValidation.removeForbiddenCharacters email) |> ignore
+        let reader = cmd.ExecuteReader()                        
+        
+        let currentUser : UserData =
+            if reader.Read() then
+                {
+                main_id = ""
+                family_name = reader.GetString(0)
+                first_name = reader.GetString(1)    
+                password = ""
+                permission = 4
+                phone_number = reader.GetString(2)
+                email = ""
+                city = reader.GetString(3)
+                street = reader.GetString(4)
+                house_number = reader.GetString(5)
+                floor_door = reader.GetString(6)    
+               }
+            else                
+                failwith "Nincs ilyen felhasználó az adatbázisban"
+
+        connection.Close()
+        currentUser
+        
 
         

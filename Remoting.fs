@@ -37,6 +37,17 @@ module Server =
         }
 
     [<Rpc>]
+    let CurrentUserData (userEmail: string) =
+        let loginUser = DatabaseSearch.SearchForUsersData userEmail
+
+
+        async {            
+                    
+            return loginUser
+        }
+
+
+    [<Rpc>]
     let RegisterNewUser (userData: UserData) =           
         let serverResponse = UpdatingDatabase.AddUser(userData)       
         
@@ -133,6 +144,16 @@ module Server =
         let userPerm = DatabaseSearch.GetPermision userEmail
         async{
             return userPerm
+        }
+
+
+    [<Rpc>]
+    let UpdateUser (currentUser: UserData) =        
+        
+        async{
+            let dataBaseResponse = UpdatingDatabase.UpdateUserData currentUser
+            return dataBaseResponse
+        
         }
 
     [<Rpc>]

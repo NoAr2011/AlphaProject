@@ -16,7 +16,7 @@
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0" ws-hole="MenuBar"></ul>
           <ul class="nav navbar-nav navbar-right">
-          <a id="LoginEmail" class="nav-link"></a>
+          <a href = "/userPage" id="LoginEmail" class="nav-link"></a>
           </ul>
         </div>
       </div>
@@ -31,11 +31,10 @@
 				<li>Manufacturer</li>
 				<li>Car Type</li>
 				<li>Manufac. year</li>
-				<li>Failure</li>
+				<li>Malfunction</li>
 				<li>Estimated Cost ($)</li>
 				<li>Repair Status</li>
-				
-				
+
 			</ul>
 			
 			 <ul ws-hole="ListContainer" class="dataDisplay">			
@@ -48,21 +47,16 @@
 					 <li class = "item">${m_year}</li>
 					 <li class = "item">${failure}</li>
 					 <li class = "item">${repair_cost}</li>					
-					 <li class = "item">${repair_status}</li>
-					 
+					 <li class = "item">${repair_status}</li>					 
 					  
 				 </ul>
-				 
-				 
+
 			 </ul> 		
 			 
 			<button class="btn btn-outline-primary" ws-onclick="OnSend">Search for vehivle</button>
 				
 		</div>
-		
-		
-         
-        
+
       </div>
     </div>
     

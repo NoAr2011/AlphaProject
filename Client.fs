@@ -16,6 +16,7 @@ module Templates =
     type SignInTemplate = Templating.Template<"LoginPage.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
     type AddCarTemplate = Templating.Template<"CarRegist.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
     type CStatusTemplate = Templating.Template<"CarStatus.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
+    type UserPage = Templating.Template<"UserDataPage.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
 
 [<JavaScript>]
 module Client =
@@ -24,18 +25,31 @@ module Client =
      let sessionId = Var.Create ""
 
      let Main () =               
+        userEmail := JS.Window.SessionStorage.GetItem("userEmail")
+
+        if userEmail.Value <> "" && userEmail.Value <> null then
+            let menuEmail = JS.Document.GetElementById("LoginEmail")   
+            menuEmail.SetAttribute("style", "visibility: visible")
+            menuEmail.TextContent <- userEmail.Value
+
+
 
         Templates.MainTemplate.MainForm()           
                       
-           .Doc()
+            .Doc()
 
      let UserRegistration () =        
         let serverRespons = Var.Create ""        
         
         JS.SetTimeout (fun () ->
+
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-            let menuEmial = JS.Document.GetElementById("LoginEmail")
-            menuEmial.TextContent <- userEmail.Value
+
+            if userEmail.Value <> "" && userEmail.Value <> null then
+                let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                menuEmail.SetAttribute("style", "visibility: visible")
+                menuEmail.TextContent <- userEmail.Value
+
         ) 0 |> ignore   
 
 
@@ -96,8 +110,12 @@ module Client =
 
         JS.SetTimeout (fun () ->
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-            let menuEmial = JS.Document.GetElementById("LoginEmail")
-            menuEmial.TextContent <- userEmail.Value
+
+            if userEmail.Value <> "" && userEmail.Value <> null then
+                let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                menuEmail.SetAttribute("style", "visibility: visible")
+                menuEmail.TextContent <- userEmail.Value
+
         ) 0 |> ignore          
 
         Templates.SignInTemplate.MainForm()
@@ -118,8 +136,11 @@ module Client =
 
                         JS.SetTimeout (fun () ->
                             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-                            let menuEmial = JS.Document.GetElementById("LoginEmail")
-                            menuEmial.TextContent <- userEmail.Value
+
+                            let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                            menuEmail.SetAttribute("style", "visibility: visible")
+                            menuEmail.TextContent <- userEmail.Value
+                           
                         ) 0 |> ignore                        
 
                         let welcomeMsg = $"Welcome: {userEmail.Value}"
@@ -144,8 +165,11 @@ module Client =
         JS.SetTimeout (fun () ->     
 
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-            let menuEmial = JS.Document.GetElementById("LoginEmail")
-            menuEmial.TextContent <- userEmail.Value
+
+            if userEmail.Value <> "" && userEmail.Value <> null then
+                let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                menuEmail.SetAttribute("style", "visibility: visible")
+                menuEmail.TextContent <- userEmail.Value
 
             let faulureSelect = JS.Document.GetElementById("failure") :?> HTMLSelectElement           
 
@@ -169,8 +193,11 @@ module Client =
                     let! sessionIdResponse = Server.ReturnSessionId()                          
                     
                     userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-                    let menuEmial = JS.Document.GetElementById("LoginEmail")
-                    menuEmial.TextContent <- userEmail.Value 
+
+                    if userEmail.Value <> "" then
+                        let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                        menuEmail.SetAttribute("style", "visibility: visible")
+                        menuEmail.TextContent <- userEmail.Value
 
                     sessionId.Value <- sessionIdResponse
 
@@ -251,8 +278,11 @@ module Client =
         
         JS.SetTimeout (fun () ->            
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-            let menuEmial = JS.Document.GetElementById("LoginEmail")
-            menuEmial.TextContent <- userEmail.Value
+
+            if userEmail.Value <> "" && userEmail.Value <> null then
+                let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                menuEmail.SetAttribute("style", "visibility: visible")
+                menuEmail.TextContent <- userEmail.Value
 
             if userEmail.Value = "" || userEmail.Value = null then
                 userPermission := "4"
@@ -324,4 +354,111 @@ module Client =
             )               
            .Doc()
 
-    
+     let UserDataPage () =
+        let serverRespons = Var.Create ""        
+
+        JS.SetTimeout (fun () ->
+
+            userEmail := JS.Window.SessionStorage.GetItem("userEmail")
+
+            if userEmail.Value <> "" && userEmail.Value <> null then
+                let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                menuEmail.SetAttribute("style", "visibility: visible")
+                menuEmail.TextContent <- userEmail.Value
+
+        ) 0 |> ignore        
+
+        async {     
+                
+                    let! sessionIdResponse = Server.ReturnSessionId()  
+                    sessionId.Value <- sessionIdResponse
+
+                    let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
+
+                    if sessionChek = sessionId.Value then
+                        let! currentUser = Server.CurrentUserData userEmail.Value                                              
+
+                        JS.SetTimeout (fun () ->
+                            let inputs = JS.Document.QuerySelectorAll("input")                                
+
+                            (inputs.Item 0 :?> HTMLInputElement).Value <- currentUser.first_name
+                            (inputs.Item 1 :?> HTMLInputElement).Value <- currentUser.family_name
+                            (inputs.Item 2 :?> HTMLInputElement).Value <- currentUser.phone_number
+                            (inputs.Item 3 :?> HTMLInputElement).Value <- currentUser.city
+                            (inputs.Item 4 :?> HTMLInputElement).Value <- currentUser.street
+                            (inputs.Item 5 :?> HTMLInputElement).Value <- currentUser.house_number
+                            (inputs.Item 6 :?> HTMLInputElement).Value <- currentUser.floor_door 
+
+                            
+                         ) 0 |> ignore
+                }
+                |> Async.StartImmediate
+
+        Templates.UserPage.MainForm()
+            .OnClick(fun e ->                
+                let allIputs = JS.Document.QuerySelectorAll("input")
+                for i in 0 .. allIputs.Length - 1 do
+                    let input = allIputs.[i] :?> HTMLInputElement
+                    input.RemoveAttribute("disabled")       
+                    
+                e.Vars.FirstName.Value <- (allIputs.Item 0 :?> HTMLInputElement).Value
+                e.Vars.LastName.Value <- (allIputs.Item 1 :?> HTMLInputElement).Value
+                e.Vars.Phone.Value <- (allIputs.Item 2 :?> HTMLInputElement).Value
+                e.Vars.City.Value <- (allIputs.Item 3 :?> HTMLInputElement).Value
+                e.Vars.Street.Value <- (allIputs.Item 4 :?> HTMLInputElement).Value
+                e.Vars.HouseNumber.Value <- (allIputs.Item 5 :?> HTMLInputElement).Value
+                e.Vars.FloorDoor.Value <- (allIputs.Item 6 :?> HTMLInputElement).Value
+            
+            )
+            .OnSubmit(fun e ->
+                async{                
+
+                    let newUser =          
+                        {
+
+                        first_name = StringValidation.removeForbiddenCharacters e.Vars.FirstName.Value
+                        family_name = StringValidation.removeForbiddenCharacters e.Vars.LastName.Value
+                        password = "notchanged"
+                        email = userEmail.Value
+                        phone_number = StringValidation.removeForbiddenCharacters e.Vars.Phone.Value
+                        main_id = "notchanged"
+                        city = StringValidation.removeForbiddenCharacters e.Vars.City.Value
+                        street = StringValidation.removeForbiddenCharacters e.Vars.Street.Value
+                        house_number = StringValidation.removeForbiddenCharacters e.Vars.HouseNumber.Value
+                        floor_door = StringValidation.removeForbiddenCharacters e.Vars.FloorDoor.Value
+                        permission = 4   
+                        
+                    }                   
+                    
+                    let isUserDataComplete (user: UserData) =
+                        let isNonEmpty (s: string) = not (String.IsNullOrWhiteSpace s)    
+                        
+                        isNonEmpty user.family_name &&
+                        isNonEmpty user.first_name &&                        
+                        isNonEmpty user.phone_number &&
+                        isNonEmpty user.email &&
+                        isNonEmpty user.city &&
+                        isNonEmpty user.street &&
+                        isNonEmpty user.house_number &&
+                        isNonEmpty user.floor_door
+                    
+                    let verifiValue = isUserDataComplete newUser              
+
+                    if verifiValue then
+                        
+                        let! res = Server.UpdateUser newUser
+                        serverRespons := res.ToString()                       
+                          
+                    else
+                       
+                        let nullResponse = "Please fill in all fields."
+                        serverRespons.Value <- nullResponse 
+                        
+                    JS.Alert(serverRespons.Value)      
+                    JS.Window.Location.Reload()
+                    
+                }
+                |> Async.StartImmediate
+            
+            )
+            .Doc()

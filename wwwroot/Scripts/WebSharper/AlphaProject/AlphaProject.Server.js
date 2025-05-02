@@ -1,9 +1,12 @@
 import AjaxRemotingProvider from "../WebSharper.StdLib/WebSharper.Remoting.AjaxRemotingProvider.js"
 import { Bind, Return } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
+import { EncodeJson_UserData, DecodeJson_RepairStatus, DecodeJson_FailureCost, EncodeJson_CarJoinedData, DecodeJson_CarJoinedData, DecodeJson_FSharpOption_1, DecodeJson_UserData } from "./$Generated.js"
 import { DecodeList } from "../WebSharper.Web/WebSharper.ClientSideJson.Provider.js"
-import { DecodeJson_RepairStatus, DecodeJson_FailureCost, EncodeJson_CarJoinedData, DecodeJson_CarJoinedData, DecodeJson_FSharpOption_1, EncodeJson_UserData } from "./$Generated.js"
 export function UpdateCarStatus(carLicence, carStatus){
   return(new AjaxRemotingProvider()).Send("Server/UpdateCarStatus", [carLicence, carStatus]);
+}
+export function UpdateUser(currentUser){
+  return Bind((new AjaxRemotingProvider()).Async("Server/UpdateUser", [(EncodeJson_UserData())(currentUser)]), (o) => Return(o));
 }
 export function GetUserPermission(userEmail){
   return Bind((new AjaxRemotingProvider()).Async("Server/GetUserPermission", [userEmail]), (o) => Return(o));
@@ -28,6 +31,9 @@ export function LogingInToDatabase(userPassword, userEmail){
 }
 export function RegisterNewUser(userData){
   return Bind((new AjaxRemotingProvider()).Async("Server/RegisterNewUser", [(EncodeJson_UserData())(userData)]), (o) => Return(o));
+}
+export function CurrentUserData(userEmail){
+  return Bind((new AjaxRemotingProvider()).Async("Server/CurrentUserData", [userEmail]), (o) => Return((DecodeJson_UserData())(o)));
 }
 export function CurrentUser(password, email){
   return Bind((new AjaxRemotingProvider()).Async("Server/CurrentUser", [password, email]), (o) => Return((DecodeJson_FSharpOption_1())(o)));

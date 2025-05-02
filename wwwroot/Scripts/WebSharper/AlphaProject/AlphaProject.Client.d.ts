@@ -1,5 +1,6 @@
 import Doc from "../WebSharper.UI/WebSharper.UI.Doc"
 import Var from "../WebSharper.UI/WebSharper.UI.Var`1"
+export function UserDataPage():Doc
 export function CarStatus():Doc
 export function RegisterCar():Doc
 export function SingingIn():Doc

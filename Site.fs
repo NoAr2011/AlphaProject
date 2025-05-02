@@ -12,12 +12,12 @@ type EndPoint =
     | [<EndPoint "/singIn">] SingIn
     | [<EndPoint "/carReg">] CarReg
     | [<EndPoint "/carStatus">] CarStatus
+    | [<EndPoint "/userPage">] UserPage
     
 
 module Templating =
     open WebSharper.UI.Html
-
-    // Compute a menubar where the menu item for the given endpoint is active
+    
     let MenuBar (ctx: Context<EndPoint>) endpoint : Doc list =        
         let ( => ) txt act =
             let isActive = if endpoint = act then "nav-link active" else "nav-link" 
@@ -33,7 +33,7 @@ module Templating =
             "Registration" => EndPoint.UserReg
             "Sign in" => EndPoint.SingIn
             "Register Car" => EndPoint.CarReg
-            "Car Status" => EndPoint.CarStatus               
+            "Car Status" => EndPoint.CarStatus              
         ]
 
     let Main ctx action (title: string) (body: Doc list) =
@@ -66,6 +66,13 @@ module Templating =
     
     let CarStatus ctx action (title: string) (body: Doc list)=
         Templates.CStatusTemplate()
+            .Title(title)
+            .MenuBar(MenuBar ctx action)
+            .Body(body)
+            .Doc() 
+
+    let UserDatPage ctx action (title: string) (body: Doc list)=
+        Templates.UserPage()
             .Title(title)
             .MenuBar(MenuBar ctx action)
             .Body(body)
@@ -121,6 +128,15 @@ module Site =
             Bundle = "carStatus"
         )
 
+    let UserDataPage ctx =
+        Content.Page(
+            Templating.UserDatPage ctx EndPoint.UserPage "user data" [
+                h1 [] [text ""]  
+                div [] [client (Client.UserDataPage())]
+            ],
+            Bundle = "carStatus"
+        )
+
 
     [<Website>]
     let Main =
@@ -131,4 +147,5 @@ module Site =
             | EndPoint.SingIn -> SigningInPage ctx
             | EndPoint.CarReg -> CarRegistPage ctx
             | EndPoint.CarStatus -> CarStatusPage ctx
+            |EndPoint.UserPage -> UserDataPage ctx
         )

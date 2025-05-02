@@ -47,3 +47,11 @@ The core functionality is planned to be completed by **the end of the semester**
 Further updates and improvements will be shared as the project progresses.  
 Thank you for your interest and support!
 
+---
+
+## Some Pictures of the app
+
+
+![Main Page](Main page.png)
+![User Registration Page](User Registration page.png)
+![Sign in Page](Sign in page.png)
