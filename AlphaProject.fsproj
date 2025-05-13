@@ -23,6 +23,7 @@
 	<Content Include="LoginPage.html" CopyToPublishDirectory="Always" />
 	<Content Include="UserRegist.html" CopyToPublishDirectory="Always" />
 	<Content Include="UserDataPage.html" CopyToPublishDirectory="Always" />
+	<Content Include="ChangingCarStatus.html" CopyToPublishDirectory="Always" />
 	
     <None Include="package.json" />
     <None Include="esbuild.config.mjs" />
