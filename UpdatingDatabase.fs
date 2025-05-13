@@ -109,12 +109,22 @@ module UpdatingDatabase =
      
     let UpdateUserData (curretnUser : UserData)=
         use connection = new SQLiteConnection(DataBaseConnection.dbFile)        
-
+        
         connection.Open()  
 
         try
 
-            let updateQuery = "Update User_table Set family_name = @family_name, first_name = @first_name, phone_number = @phone_number, city = @city, street = @street, house_number = @house_number, floor_door = @floor_door Where email = @Email"
+            let updateQuery = """
+                Update User_table 
+                Set family_name = @family_name, 
+                    first_name = @first_name, 
+                    phone_number = @phone_number, 
+                    city = @city, 
+                    street = @street, 
+                    house_number = @house_number, 
+                    floor_door = @floor_door 
+                    Where email = @Email
+                    """
 
             use cmd = new SQLiteCommand(updateQuery, connection)            
             
@@ -142,3 +152,29 @@ module UpdatingDatabase =
             File.WriteAllText(filePath, ex.Message)
             let returnValue = 0
             returnValue
+            
+    let UpdateCarStatus (licence: string) curretnStatus =
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)      
+        connection.Open()  
+        try
+            let updateQuery = "Update Failure_Status_switch Set status_id = (Select main_id from Repair_statuses 
+            where status_name = @currentStatus) where car_licence = @carLicence"
+
+            use cmd = new SQLiteCommand(updateQuery, connection)            
+            
+            cmd.Parameters.AddWithValue("@currentStatus", StringValidation.removeForbiddenCharacters curretnStatus) |>ignore
+            cmd.Parameters.AddWithValue("@carLicence", StringValidation.removeForbiddenCharacters licence) |>ignore
+
+            cmd.ExecuteNonQuery() |>ignore          
+        
+            connection.Close()
+
+            let returnValue = "Car Status Updated!"
+            returnValue
+
+        with
+        | ex -> 
+            connection.Close()           
+            
+            ex.Message
+        

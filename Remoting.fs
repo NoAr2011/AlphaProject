@@ -93,6 +93,13 @@ module Server =
         }
     
     [<Rpc>]
+    let GetCarByid (carLicence : string) =
+        let carData = DatabaseSearch.GetCarByLicence carLicence
+        async{
+            return carData
+        }
+
+    [<Rpc>]
     let InsertCarData (newCar: CarJoinedData) =   
         
         let serverResponse = UpdatingDatabase.InsertCarData(newCar)       
@@ -164,6 +171,7 @@ module Server =
 
     [<Rpc>]
     let UpdateCarStatus (carLicence: string) (carStatus: string) =
-        let filePath = "statusLog.txt"
-        File.WriteAllText(filePath, carLicence)
-        File.AppendAllText(filePath, carStatus)
+        let updateStatus = UpdatingDatabase.UpdateCarStatus carLicence carStatus
+        async{
+            return updateStatus
+        }

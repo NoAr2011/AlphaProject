@@ -1,24 +1,91 @@
-import Var from "../WebSharper.UI/WebSharper.UI.Var.js"
-import { StartImmediate, Delay, Bind, Zero, Combine, For } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
-import { ReturnSessionId, CurrentUserData, UpdateUser, GetUserPermission, GetCarData, GetStatusNames, GetFailureNames, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser } from "./AlphaProject.Server.js"
-import ProviderBuilder from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.ProviderBuilder.js"
-import { EventQ2, CompleteHoles } from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.Handler.js"
-import TemplateHole from "../WebSharper.UI/WebSharper.UI.TemplateHole.js"
-import { removeForbiddenCharacters } from "./AlphaProject.StringValidation.js"
-import { IsNullOrWhiteSpace } from "../WebSharper.StdLib/Microsoft.FSharp.Core.StringModule.js"
-import TemplateInstance from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.TemplateInstance.js"
-import { mainform, listitem, mainform_1, mainform_2, mainform_3, mainform_4, mainform_5 } from "./$Generated.js"
 import { Create } from "../WebSharper.UI/WebSharper.UI.ListModel.js"
 import FSharpList from "../WebSharper.StdLib/Microsoft.FSharp.Collections.FSharpList`1.js"
+import Var from "../WebSharper.UI/WebSharper.UI.Var.js"
+import { StartImmediate, Delay, Bind, For, Zero, Combine } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
+import { GetStatusNames, ReturnSessionId, GetCarByid, UpdateCarStatus, CurrentUserData, GetUserPermission, UpdateUser, GetCarData, GetFailureNames, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser } from "./AlphaProject.Server.js"
 import Doc from "../WebSharper.UI/WebSharper.UI.Doc.js"
+import ProviderBuilder from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.ProviderBuilder.js"
 import Text from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Text.js"
+import { CompleteHoles, EventQ2 } from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.Handler.js"
+import TemplateInstance from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.TemplateInstance.js"
+import { listitem, mainform, mainform_1, mainform_2, mainform_3, mainform_4, mainform_5, mainform_6 } from "./$Generated.js"
+import TemplateHole from "../WebSharper.UI/WebSharper.UI.TemplateHole.js"
+import Elt from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Elt.js"
+import { removeForbiddenCharacters } from "./AlphaProject.StringValidation.js"
+import { IsNullOrWhiteSpace } from "../WebSharper.StdLib/Microsoft.FSharp.Core.StringModule.js"
 import { Get } from "../WebSharper.StdLib/WebSharper.Enumerator.js"
 import { isIDisposable } from "../WebSharper.StdLib/System.IDisposable.js"
-import Elt from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Elt.js"
 import { tryFind } from "../WebSharper.StdLib/Microsoft.FSharp.Collections.SeqModule.js"
 import $StartupCode_Client from "./$StartupCode_Client.js"
+export function ChangeStatus(){
+  const carData=Create((item) => item.car_licence, FSharpList.Empty);
+  Var.Create_1("");
+  const statusData=Create((item) => item.status_name, FSharpList.Empty);
+  setTimeout(() => {
+    const faulureSelect=globalThis.document.getElementById("status");
+    userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
+    if(userEmail().Get()!=""&&userEmail().Get()!=null){
+      const menuEmail=globalThis.document.getElementById("LoginEmail");
+      menuEmail.setAttribute("style", "visibility: visible");
+      menuEmail.textContent=userEmail().Get();
+    }
+    const _2=null;
+    StartImmediate(Delay(() => Bind(GetStatusNames(), (a) => {
+      statusData.AppendMany(a);
+      return For(statusData, (a_1) => {
+        const opt=globalThis.document.createElement("option");
+        opt.value=a_1.status_name;
+        opt.text=a_1.status_name;
+        faulureSelect.appendChild(opt);
+        return Zero();
+      });
+    })), null);
+  }, 0);
+  const L=Doc.Convert((item) => {
+    const this_2=new ProviderBuilder("New_1");
+    const this_3=(this_2.h.push(new Text("license", item.car_licence)),this_2);
+    const this_4=(this_3.h.push(new Text("manuf", item.manuf)),this_3);
+    const this_5=(this_4.h.push(new Text("c_type", item.c_type)),this_4);
+    const this_6=(this_5.h.push(new Text("m_year", String(item.m_year))),this_5);
+    const this_7=(this_6.h.push(new Text("failure", item.failure)),this_6);
+    const this_8=(this_7.h.push(new Text("repair_cost", String(item.repair_costs))),this_7);
+    const b_1=(this_8.h.push(new Text("repair_status", item.repair_status)),this_8);
+    const p_1=CompleteHoles(b_1.k, b_1.h, []);
+    const i_1=new TemplateInstance(p_1[1], listitem(p_1[0]));
+    let _2=(b_1.i=i_1,i_1);
+    return _2.Doc;
+  }, carData.v);
+  const t=new ProviderBuilder("New_1");
+  const this_1=(t.h.push(EventQ2(t.k, "onclick", () => t.i, (e) => {
+    const _2=null;
+    StartImmediate(Delay(() => Bind(ReturnSessionId(), (a) => {
+      sessionId().Set(a);
+      return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?Bind(GetCarByid(TemplateHole.Value(e.Vars.Hole("licence")).Get()), (a_1) => {
+        carData.AppendMany(a_1);
+        return Zero();
+      }):Zero();
+    })), null);
+  })),t);
+  const t_1=(this_1.h.push(new Elt("listcontainer", L)),this_1);
+  const b=(t_1.h.push(EventQ2(t_1.k, "onsubmit", () => t_1.i, (e) => {
+    const _2=null;
+    StartImmediate(Delay(() => {
+      const currentStatus=TemplateHole.Value(e.Vars.Hole("status")).Get();
+      return Bind(UpdateCarStatus(TemplateHole.Value(e.Vars.Hole("licence")).Get(), currentStatus), (a) => {
+        alert(String(a));
+        globalThis.location.reload();
+        return Zero();
+      });
+    }), null);
+  })),t_1);
+  const p=CompleteHoles(b.k, b.h, [["licence", 0, null], ["status", 0, null], ["repair_cost", 1, null]]);
+  const i=new TemplateInstance(p[1], mainform(p[0]));
+  let _1=(b.i=i,i);
+  return _1.Doc;
+}
 export function UserDataPage(){
   const serverRespons=Var.Create_1("");
+  const userPermission=Var.Create_1("");
   setTimeout(() => {
     userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
     if(userEmail().Get()!=""&&userEmail().Get()!=null){
@@ -30,7 +97,7 @@ export function UserDataPage(){
   const _1=null;
   StartImmediate(Delay(() => Bind(ReturnSessionId(), (a) => {
     sessionId().Set(a);
-    return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?Bind(CurrentUserData(userEmail().Get()), (a_1) => {
+    return Combine(globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?Bind(CurrentUserData(userEmail().Get()), (a_1) => {
       setTimeout(() => {
         const inputs=globalThis.document.querySelectorAll("input");
         inputs[0].value=a_1.first_name;
@@ -42,7 +109,10 @@ export function UserDataPage(){
         inputs[6].value=a_1.floor_door;
       }, 0);
       return Zero();
-    }):Zero();
+    }):Zero(), Delay(() => Bind(GetUserPermission(userEmail().Get()), (a_1) => {
+      userPermission.Set(a_1);
+      return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
+    })));
   })), null);
   const t=new ProviderBuilder("New_1");
   const t_1=(t.h.push(EventQ2(t.k, "onclick", () => t.i, (e) => {
@@ -88,7 +158,7 @@ export function UserDataPage(){
     }), null);
   })),t_1);
   const p=CompleteHoles(b.k, b.h, [["firstname", 0, null], ["lastname", 0, null], ["phone", 0, null], ["city", 0, null], ["street", 0, null], ["housenumber", 0, null], ["floordoor", 0, null]]);
-  const i=new TemplateInstance(p[1], mainform(p[0]));
+  const i=new TemplateInstance(p[1], mainform_1(p[0]));
   let _2=(b.i=i,i);
   return _2.Doc;
 }
@@ -109,7 +179,7 @@ export function CarStatus(){
       const _2=null;
       StartImmediate(Delay(() => Bind(GetUserPermission(userEmail().Get()), (a) => {
         userPermission.Set(a);
-        return Zero();
+        return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
       })), null);
     }
   }, 0);
@@ -130,47 +200,51 @@ export function CarStatus(){
   const t=new ProviderBuilder("New_1");
   const this_1=(t.h.push(EventQ2(t.k, "onsend", () => t.i, () => {
     const _2=null;
-    StartImmediate(Delay(() => Bind(ReturnSessionId(), (a) => {
-      sessionId().Set(a);
-      return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?(userEmail().Set(globalThis.sessionStorage.getItem("userEmail")),Bind(GetCarData(userEmail().Get(), userPermission.Get()), (a_1) => {
-        serverRespons.Set(String(a_1));
-        carData.AppendMany(a_1);
-        return Bind(GetStatusNames(), (a_2) => {
-          statusData.AppendMany(a_2);
-          setTimeout(() => {
-            const selects=globalThis.document.querySelectorAll(".repair_dropdown");
-            for(let i_1=0, _3=selects.length-1;i_1<=_3;i_1++){
-              const selectEl=selects[i_1];
-              if(userPermission.Get()!="2")selectEl.disabled=true;
-              else selectEl.disabled=false;
-              const e=Get(statusData);
-              try {
-                while(e.MoveNext())
-                  {
-                    const value=e.Current;
-                    const opt=globalThis.document.createElement("option");
-                    opt.value=value.status_name;
-                    opt.text=value.status_name;
-                    selectEl.append(opt);
-                  }
+    StartImmediate(Delay(() => {
+      carData.Clear();
+      return Bind(ReturnSessionId(), (a) => {
+        sessionId().Set(a);
+        return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?(userEmail().Set(globalThis.sessionStorage.getItem("userEmail")),Bind(GetCarData(userEmail().Get(), userPermission.Get()), (a_1) => {
+          serverRespons.Set(String(a_1));
+          carData.AppendMany(a_1);
+          return Bind(GetStatusNames(), (a_2) => {
+            statusData.AppendMany(a_2);
+            setTimeout(() => {
+              const selects=globalThis.document.querySelectorAll(".repair_dropdown");
+              for(let i_1=0, _3=selects.length-1;i_1<=_3;i_1++){
+                const selectEl=selects[i_1];
+                if(userPermission.Get()!="2")selectEl.disabled=true;
+                else selectEl.disabled=false;
+                const e=Get(statusData);
+                try {
+                  while(e.MoveNext())
+                    {
+                      const value=e.Current;
+                      const opt=globalThis.document.createElement("option");
+                      opt.value=value.status_name;
+                      opt.text=value.status_name;
+                      selectEl.append(opt);
+                    }
+                }
+                finally {
+                  if(typeof e=="object"&&isIDisposable(e))e.Dispose();
+                }
               }
-              finally {
-                if(typeof e=="object"&&isIDisposable(e))e.Dispose();
-              }
-            }
-          }, 0);
-          return Zero();
-        });
-      })):Zero();
-    })), null);
+            }, 0);
+            return Zero();
+          });
+        })):Zero();
+      });
+    }), null);
   })),t);
   const b=(this_1.h.push(new Elt("listcontainer", L)),this_1);
   const p=CompleteHoles(b.k, b.h, []);
-  const i=new TemplateInstance(p[1], mainform_1(p[0]));
+  const i=new TemplateInstance(p[1], mainform_2(p[0]));
   let _1=(b.i=i,i);
   return _1.Doc;
 }
 export function RegisterCar(){
+  const userPermission=Var.Create_1("");
   const failureData=Create((item) => item.failure_name, FSharpList.Empty);
   const serverRespons=Var.Create_1("");
   setTimeout(() => {
@@ -184,13 +258,16 @@ export function RegisterCar(){
     const _2=null;
     StartImmediate(Delay(() => Bind(GetFailureNames(), (a) => {
       failureData.AppendMany(a);
-      return For(failureData, (a_1) => {
+      return Combine(For(failureData, (a_1) => {
         const opt=globalThis.document.createElement("option");
         opt.value=String(a_1.failure_name);
         opt.text=String(a_1.failure_name);
         faulureSelect.appendChild(opt);
         return Zero();
-      });
+      }), Delay(() => Bind(GetUserPermission(userEmail().Get()), (a_1) => {
+        userPermission.Set(a_1);
+        return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
+      })));
     })), null);
   }, 0);
   const t=new ProviderBuilder("New_1");
@@ -242,17 +319,23 @@ export function RegisterCar(){
     }, 0);
   })),t_1);
   const p=CompleteHoles(b.k, b.h, [["licence", 0, null], ["manuf", 0, null], ["c_type", 0, null], ["m_year", 1, null], ["failure", 0, null], ["repair_cost", 1, null]]);
-  const i=new TemplateInstance(p[1], mainform_2(p[0]));
+  const i=new TemplateInstance(p[1], mainform_3(p[0]));
   let _1=(b.i=i,i);
   return _1.Doc;
 }
 export function SingingIn(){
+  const userPermission=Var.Create_1("");
   setTimeout(() => {
     userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
     if(userEmail().Get()!=""&&userEmail().Get()!=null){
       const menuEmail=globalThis.document.getElementById("LoginEmail");
       menuEmail.setAttribute("style", "visibility: visible");
       menuEmail.textContent=userEmail().Get();
+      const _2=null;
+      StartImmediate(Delay(() => Bind(GetUserPermission(userEmail().Get()), (a) => {
+        userPermission.Set(a);
+        return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
+      })), null);
     }
   }, 0);
   const t=new ProviderBuilder("New_1");
@@ -272,7 +355,13 @@ export function SingingIn(){
             const menuEmail=globalThis.document.getElementById("LoginEmail");
             menuEmail.setAttribute("style", "visibility: visible");
             menuEmail.textContent=userEmail().Get();
-          }, 0),alert("Welcome: "+String(userEmail().Get())),Zero());
+          }, 0),Bind(GetUserPermission(userEmail().Get()), (a_1) => {
+            userPermission.Set(a_1);
+            return Combine(userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero(), Delay(() => {
+              alert("Welcome: "+String(userEmail().Get()));
+              return Zero();
+            }));
+          }));
         }
         return Combine(_3, Delay(() => {
           TemplateHole.Value(e.Vars.Hole("password")).Set("");
@@ -283,18 +372,24 @@ export function SingingIn(){
     }), null);
   })),t);
   const p=CompleteHoles(b.k, b.h, [["email", 0, null], ["password", 0, null]]);
-  const i=new TemplateInstance(p[1], mainform_3(p[0]));
+  const i=new TemplateInstance(p[1], mainform_4(p[0]));
   let _1=(b.i=i,i);
   return _1.Doc;
 }
 export function UserRegistration(){
   const serverRespons=Var.Create_1("");
+  const userPermission=Var.Create_1("");
   setTimeout(() => {
     userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
     if(userEmail().Get()!=""&&userEmail().Get()!=null){
       const menuEmail=globalThis.document.getElementById("LoginEmail");
       menuEmail.setAttribute("style", "visibility: visible");
       menuEmail.textContent=userEmail().Get();
+      const _2=null;
+      StartImmediate(Delay(() => Bind(GetUserPermission(userEmail().Get()), (a) => {
+        userPermission.Set(a);
+        return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
+      })), null);
     }
   }, 0);
   const t=new ProviderBuilder("New_1");
@@ -331,22 +426,28 @@ export function UserRegistration(){
     }), null);
   })),t);
   const p=CompleteHoles(b.k, b.h, [["firstname", 0, null], ["lastname", 0, null], ["email", 0, null], ["phone", 0, null], ["city", 0, null], ["street", 0, null], ["housenumber", 0, null], ["floordoor", 0, null], ["password", 0, null]]);
-  const i=new TemplateInstance(p[1], mainform_4(p[0]));
+  const i=new TemplateInstance(p[1], mainform_5(p[0]));
   let _1=(b.i=i,i);
   return _1.Doc;
 }
 export function Main(){
   userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
+  const userPermission=Var.Create_1("");
   if(userEmail().Get()!=""&&userEmail().Get()!=null){
     const menuEmail=globalThis.document.getElementById("LoginEmail");
     menuEmail.setAttribute("style", "visibility: visible");
     menuEmail.textContent=userEmail().Get();
+    const _1=null;
+    StartImmediate(Delay(() => Bind(GetUserPermission(userEmail().Get()), (a) => {
+      userPermission.Set(a);
+      return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
+    })), null);
   }
   const b=new ProviderBuilder("New_1");
   const p=CompleteHoles(b.k, b.h, []);
-  const i=new TemplateInstance(p[1], mainform_5(p[0]));
-  let _1=(b.i=i,i);
-  return _1.Doc;
+  const i=new TemplateInstance(p[1], mainform_6(p[0]));
+  let _2=(b.i=i,i);
+  return _2.Doc;
 }
 export function sessionId(){
   return $StartupCode_Client.sessionId;

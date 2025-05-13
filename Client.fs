@@ -17,6 +17,7 @@ module Templates =
     type AddCarTemplate = Templating.Template<"CarRegist.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
     type CStatusTemplate = Templating.Template<"CarStatus.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
     type UserPage = Templating.Template<"UserDataPage.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
+    type StatusChange = Templating.Template<"ChangingCarStatus.html", ClientLoad.FromDocument, ServerLoad.WhenChanged>
 
 [<JavaScript>]
 module Client =
@@ -26,6 +27,7 @@ module Client =
 
      let Main () =               
         userEmail := JS.Window.SessionStorage.GetItem("userEmail")
+        let userPermission = Var.Create ""
 
         if userEmail.Value <> "" && userEmail.Value <> null then
             let menuEmail = JS.Document.GetElementById("LoginEmail")   
@@ -33,13 +35,24 @@ module Client =
             menuEmail.TextContent <- userEmail.Value
 
 
+            async{
+                let! perRes = Server.GetUserPermission userEmail.Value
+                userPermission := perRes
+
+                if userPermission.Value = "2" then
+                    let statusEmail = JS.Document.GetElementById("StatusChange")
+                    statusEmail.SetAttribute("style", "visibility: visible")
+        
+            }
+            |>Async.StartImmediate
 
         Templates.MainTemplate.MainForm()           
                       
             .Doc()
 
      let UserRegistration () =        
-        let serverRespons = Var.Create ""        
+        let serverRespons = Var.Create ""   
+        let userPermission = Var.Create ""
         
         JS.SetTimeout (fun () ->
 
@@ -50,8 +63,18 @@ module Client =
                 menuEmail.SetAttribute("style", "visibility: visible")
                 menuEmail.TextContent <- userEmail.Value
 
-        ) 0 |> ignore   
+                async{
+                    let! perRes = Server.GetUserPermission userEmail.Value
+                    userPermission := perRes
 
+                    if userPermission.Value = "2" then
+                        let statusEmail = JS.Document.GetElementById("StatusChange")
+                        statusEmail.SetAttribute("style", "visibility: visible")
+                }
+                |> Async.StartImmediate
+
+        ) 0 |> ignore   
+        
 
         Templates.UserRegTemplate.MainForm()            
             .OnSubmit(fun e ->                
@@ -107,7 +130,7 @@ module Client =
             .Doc()
 
      let SingingIn () =      
-
+        let userPermission = Var.Create ""
         JS.SetTimeout (fun () ->
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
@@ -116,8 +139,18 @@ module Client =
                 menuEmail.SetAttribute("style", "visibility: visible")
                 menuEmail.TextContent <- userEmail.Value
 
-        ) 0 |> ignore          
+                async{
+                    let! perRes = Server.GetUserPermission userEmail.Value
+                    userPermission := perRes
 
+                    if userPermission.Value = "2" then
+                        let statusEmail = JS.Document.GetElementById("StatusChange")
+                        statusEmail.SetAttribute("style", "visibility: visible")
+                }
+                |>Async.StartImmediate  
+
+        ) 0 |> ignore
+                        
         Templates.SignInTemplate.MainForm()
             .OnSubmit(fun e ->
                 async{
@@ -139,14 +172,22 @@ module Client =
 
                             let menuEmail = JS.Document.GetElementById("LoginEmail")   
                             menuEmail.SetAttribute("style", "visibility: visible")
-                            menuEmail.TextContent <- userEmail.Value
-                           
-                        ) 0 |> ignore                        
+                            menuEmail.TextContent <- userEmail.Value                  
+
+                        ) 0 |> ignore   
+                        
+
+                        let! perRes = Server.GetUserPermission userEmail.Value
+                        userPermission := perRes
+
+                        if userPermission.Value = "2" then
+                            let statusEmail = JS.Document.GetElementById("StatusChange")
+                            statusEmail.SetAttribute("style", "visibility: visible")
 
                         let welcomeMsg = $"Welcome: {userEmail.Value}"
                         JS.Alert(welcomeMsg)
                     | None ->
-                        JS.Alert("No user found")                                 
+                        JS.Alert("No user found")                        
 
                     e.Vars.Password.Value <-""
                     e.Vars.Email.Value <-""              
@@ -158,7 +199,7 @@ module Client =
             .Doc()
 
      let RegisterCar () =     
-        
+        let userPermission = Var.Create ""
         let failureData: FailureCosts = ListModel.Create(fun item -> item.failure_name)[] 
         let serverRespons = Var.Create ""
         
@@ -183,6 +224,13 @@ module Client =
                         opt.Value <- value.failure_name.ToString()
                         opt.Text <- value.failure_name.ToString()
                         faulureSelect.AppendChild(opt) |> ignore
+
+                    let! perRes = Server.GetUserPermission userEmail.Value
+                    userPermission := perRes
+
+                    if userPermission.Value = "2" then
+                        let statusEmail = JS.Document.GetElementById("StatusChange")
+                        statusEmail.SetAttribute("style", "visibility: visible")
                     }
                     |> Async.StartImmediate
             ) 0 |> ignore         
@@ -291,15 +339,22 @@ module Client =
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
 
+                    if userPermission.Value = "2" then
+                        let statusEmail = JS.Document.GetElementById("StatusChange")
+                        statusEmail.SetAttribute("style", "visibility: visible")
+
                 }
                 |> Async.StartImmediate       
+                
+                
            
         ) 0 |> ignore         
         
         Templates.CStatusTemplate.MainForm()
             .OnSend(fun e ->
                 async {     
-                
+                    carData.Clear()
+
                     let! sessionIdResponse = Server.ReturnSessionId()  
                     sessionId.Value <- sessionIdResponse
 
@@ -355,7 +410,8 @@ module Client =
            .Doc()
 
      let UserDataPage () =
-        let serverRespons = Var.Create ""        
+        let serverRespons = Var.Create ""   
+        let userPermission = Var.Create ""
 
         JS.SetTimeout (fun () ->
 
@@ -391,6 +447,13 @@ module Client =
 
                             
                          ) 0 |> ignore
+
+                    let! perRes = Server.GetUserPermission userEmail.Value
+                    userPermission := perRes
+
+                    if userPermission.Value = "2" then
+                        let statusEmail = JS.Document.GetElementById("StatusChange")
+                        statusEmail.SetAttribute("style", "visibility: visible")
                 }
                 |> Async.StartImmediate
 
@@ -461,4 +524,81 @@ module Client =
                 |> Async.StartImmediate
             
             )
+            .Doc()
+
+     let ChangeStatus () =
+        let carData: CarsJoinedData = ListModel.Create (fun item -> item.car_licence) [] 
+          
+        let userPermission = Var.Create ""
+        let statusData: RepairStatuses = ListModel.Create(fun item -> item.status_name)[]
+
+        JS.SetTimeout (fun () ->                                  
+            let faulureSelect = JS.Document.GetElementById("status") :?> HTMLSelectElement
+
+            userEmail := JS.Window.SessionStorage.GetItem("userEmail")
+
+            if userEmail.Value <> "" && userEmail.Value <> null then
+                let menuEmail = JS.Document.GetElementById("LoginEmail")   
+                menuEmail.SetAttribute("style", "visibility: visible")
+                menuEmail.TextContent <- userEmail.Value
+
+            async{
+                let! statusOptions = Server.GetStatusNames()
+
+                statusData.AppendMany statusOptions
+                    
+                for value in statusData do
+                    let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
+                    opt.Value <- value.status_name
+                    opt.Text <- value.status_name
+                    faulureSelect.AppendChild(opt) |> ignore                           
+            }
+            |>Async.StartImmediate
+        ) 0 |> ignore 
+        
+
+        Templates.StatusChange.MainForm()
+            .OnClick(fun e ->
+                async{
+                    let! sessionIdResponse = Server.ReturnSessionId()  
+                    sessionId.Value <- sessionIdResponse
+
+                    let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
+                     
+                    if sessionChek = sessionId.Value then 
+                        let! res = Server.GetCarByid e.Vars.Licence.Value                        
+                        carData.AppendMany res                  
+                }
+                |>Async.StartImmediate
+            
+            
+            )
+            .ListContainer(
+                carData.View.DocSeqCached(fun (item: CarJoinedData) ->
+                    Templates.CStatusTemplate.ListItem()
+                        .license(item.car_licence)                        
+                        .manuf(item.manuf)
+                        .c_type(item.c_type)
+                        .m_year(item.m_year.ToString())
+                        .failure(item.failure) 
+                        .repair_cost(item.repair_costs.ToString())
+                        .repair_status(item.repair_status)
+                        .Doc()                
+                )
+            )      
+            .OnSubmit(fun e ->
+                async{
+                    
+                    let currentStatus = e.Vars.status.Value
+                    let licence = e.Vars.Licence.Value
+
+                    let! res = Server.UpdateCarStatus licence currentStatus
+                    JS.Alert(res.ToString()) 
+                    JS.Window.Location.Reload()
+
+                }
+                |>Async.StartImmediate
+            
+            )           
+
             .Doc()

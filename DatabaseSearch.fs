@@ -283,4 +283,54 @@ module DatabaseSearch =
         currentUser
         
 
-        
+    let GetCarByLicence carLicence =        
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        connection.Open()       
+                  
+        let sqlQuery = $"""Select u.main_id, c.car_licence, c.c_type, c.m_year, c.manuf, 
+                f.failure_name, f.repair_costs, s.status_name, s.status_desc From
+                User_table u Inner Join Cars_table c On u.main_id = c.user_id 
+                Left Join Failure_switch fs On fs.car_licence = c.car_licence 
+                Left Join Failure_costs f On f.main_id = fs.failure_id 
+                Left Join Failure_status_switch fss On fss.car_licence = c.car_licence 
+                Left Join Repair_statuses s On s.main_id = fss.status_id Where 
+                c.car_licence = @carLicence"""       
+
+        use cmd = new SQLiteCommand(sqlQuery, connection)  
+        cmd.Parameters.AddWithValue("@carLicence", StringValidation.removeForbiddenCharacters carLicence) |> ignore
+        let reader = cmd.ExecuteReader()
+
+        let rec GetDataTable tableData=       
+      
+            if reader.Read() then           
+
+                let currentCar : CarJoinedData= 
+                    {
+
+                    car_licence = reader.GetString(1)                     
+                    c_type = reader.GetString(2)
+                    m_year = reader.GetInt64(3)
+                    user_id = reader.GetInt64(0)
+                    manuf = reader.GetString(4)
+                    failure = reader.GetString(5)
+                    repair_costs =reader.GetValue(6) :?> float
+                    repair_status = reader.GetString(7)
+
+                }
+                                                
+                let tempList = [currentCar]
+                let return_list = tableData @ tempList
+
+                GetDataTable return_list
+                
+            else
+                tableData 
+                    
+        let emptyCars = []
+
+        let allCars = GetDataTable emptyCars                     
+        connection.Close()
+        let filePath = "tempLog.txt"
+            
+        File.WriteAllText(filePath, allCars.Head.c_type)
+        allCars   

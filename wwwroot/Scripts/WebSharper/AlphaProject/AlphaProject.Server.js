@@ -1,9 +1,9 @@
-import AjaxRemotingProvider from "../WebSharper.StdLib/WebSharper.Remoting.AjaxRemotingProvider.js"
 import { Bind, Return } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
+import AjaxRemotingProvider from "../WebSharper.StdLib/WebSharper.Remoting.AjaxRemotingProvider.js"
 import { EncodeJson_UserData, DecodeJson_RepairStatus, DecodeJson_FailureCost, EncodeJson_CarJoinedData, DecodeJson_CarJoinedData, DecodeJson_FSharpOption_1, DecodeJson_UserData } from "./$Generated.js"
 import { DecodeList } from "../WebSharper.Web/WebSharper.ClientSideJson.Provider.js"
 export function UpdateCarStatus(carLicence, carStatus){
-  return(new AjaxRemotingProvider()).Send("Server/UpdateCarStatus", [carLicence, carStatus]);
+  return Bind((new AjaxRemotingProvider()).Async("Server/UpdateCarStatus", [carLicence, carStatus]), (o) => Return(o));
 }
 export function UpdateUser(currentUser){
   return Bind((new AjaxRemotingProvider()).Async("Server/UpdateUser", [(EncodeJson_UserData())(currentUser)]), (o) => Return(o));
@@ -22,6 +22,9 @@ export function CurrentUserId(password, email){
 }
 export function InsertCarData(newCar){
   return Bind((new AjaxRemotingProvider()).Async("Server/InsertCarData", [(EncodeJson_CarJoinedData())(newCar)]), (o) => Return(o));
+}
+export function GetCarByid(carLicence){
+  return Bind((new AjaxRemotingProvider()).Async("Server/GetCarByid", [carLicence]), (o) => Return(((DecodeList(DecodeJson_CarJoinedData))())(o)));
 }
 export function GetCarData(userEMail, userPermission){
   return Bind((new AjaxRemotingProvider()).Async("Server/GetCarData", [userEMail, userPermission]), (o) => Return(((DecodeList(DecodeJson_CarJoinedData))())(o)));

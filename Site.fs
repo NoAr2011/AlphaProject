@@ -13,6 +13,7 @@ type EndPoint =
     | [<EndPoint "/carReg">] CarReg
     | [<EndPoint "/carStatus">] CarStatus
     | [<EndPoint "/userPage">] UserPage
+    | [<EndPoint "/changeStatus">] StatusChange
     
 
 module Templating =
@@ -78,6 +79,13 @@ module Templating =
             .MenuBar(MenuBar ctx action)
             .Body(body)
             .Doc() 
+
+    let Changestatus ctx action (title: string) (body: Doc list)=
+        Templates.StatusChange()
+            .Title(title)
+            .MenuBar(MenuBar ctx action)
+            .Body(body)
+            .Doc()
     
 
 module Site =
@@ -138,6 +146,14 @@ module Site =
             Bundle = "carStatus"
         )
 
+    let ChangeStatus ctx =
+        Content.Page(
+            Templating.Changestatus ctx EndPoint.StatusChange "changing status" [
+                h1 [] [text "Changing Car Status"]
+                div [] [client (Client.ChangeStatus())]            
+            ],
+            Bundle = "changeStatus"
+        )
 
     [<Website>]
     let Main =
@@ -149,4 +165,5 @@ module Site =
             | EndPoint.CarReg -> CarRegistPage ctx
             | EndPoint.CarStatus -> CarStatusPage ctx
             |EndPoint.UserPage -> UserDataPage ctx
+            |EndPoint.StatusChange -> ChangeStatus ctx
         )
