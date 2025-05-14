@@ -2,7 +2,7 @@ import { Create } from "../WebSharper.UI/WebSharper.UI.ListModel.js"
 import FSharpList from "../WebSharper.StdLib/Microsoft.FSharp.Collections.FSharpList`1.js"
 import Var from "../WebSharper.UI/WebSharper.UI.Var.js"
 import { StartImmediate, Delay, Bind, For, Zero, Combine } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
-import { GetStatusNames, ReturnSessionId, GetCarByid, UpdateCarStatus, CurrentUserData, GetUserPermission, UpdateUser, GetCarData, GetFailureNames, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser } from "./AlphaProject.Server.js"
+import { GetStatusNames, ReturnSessionId, GetCarByid, UpdateCarStatus, CurrentUserData, GetUserPermission, UpdateUser, GetCarData, GetFailureNames, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser, EnableParallelWrite } from "./AlphaProject.Server.js"
 import Doc from "../WebSharper.UI/WebSharper.UI.Doc.js"
 import ProviderBuilder from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.ProviderBuilder.js"
 import Text from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Text.js"
@@ -431,6 +431,7 @@ export function UserRegistration(){
   return _1.Doc;
 }
 export function Main(){
+  EnableParallelWrite();
   userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
   const userPermission=Var.Create_1("");
   if(userEmail().Get()!=""&&userEmail().Get()!=null){

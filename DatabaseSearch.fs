@@ -201,8 +201,7 @@ module DatabaseSearch =
 
         userPerm
 
-
-    let GetAllCarData =        
+    let GetAllCarData () =        
         use connection = new SQLiteConnection(DataBaseConnection.dbFile)
         connection.Open()        
         
@@ -329,8 +328,5 @@ module DatabaseSearch =
         let emptyCars = []
 
         let allCars = GetDataTable emptyCars                     
-        connection.Close()
-        let filePath = "tempLog.txt"
-            
-        File.WriteAllText(filePath, allCars.Head.c_type)
+        connection.Close()        
         allCars   

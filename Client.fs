@@ -25,7 +25,9 @@ module Client =
      let password = Var.Create ""    
      let sessionId = Var.Create ""
 
-     let Main () =               
+     let Main () =  
+        Server.EnableParallelWrite()
+        
         userEmail := JS.Window.SessionStorage.GetItem("userEmail")
         let userPermission = Var.Create ""
 
@@ -345,9 +347,7 @@ module Client =
 
                 }
                 |> Async.StartImmediate       
-                
-                
-           
+
         ) 0 |> ignore         
         
         Templates.CStatusTemplate.MainForm()

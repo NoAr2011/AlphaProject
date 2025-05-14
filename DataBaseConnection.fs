@@ -6,10 +6,11 @@ module DataBaseConnection =
     
     let dbFile = "Data Source=ProjectAlphaDatabase.db"    
 
-    let connectToDatabase () =     
-        use connection = new SQLiteConnection($"Data Source={dbFile}")
+    let ConnectToDatabase () =     
+        use connection = new SQLiteConnection(dbFile)
         connection.Open()
-        connection
+        use cmd = new SQLiteCommand("PRAGMA journal_mode=WAL;", connection)
+        cmd.ExecuteNonQuery() |> ignore
 
     
 

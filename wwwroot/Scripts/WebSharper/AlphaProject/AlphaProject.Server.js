@@ -44,3 +44,6 @@ export function CurrentUser(password, email){
 export function ReturnSessionId(){
   return Bind((new AjaxRemotingProvider()).Async("Server/ReturnSessionId", []), (o) => Return(o));
 }
+export function EnableParallelWrite(){
+  return(new AjaxRemotingProvider()).Send("Server/EnableParallelWrite", []);
+}

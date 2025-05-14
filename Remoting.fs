@@ -8,6 +8,10 @@ module Server =
     let mutable sessions : Map<string, string> = Map.empty
 
     [<Rpc>]
+    let EnableParallelWrite () =
+        DataBaseConnection.ConnectToDatabase()
+
+    [<Rpc>]
     let ReturnSessionId()=        
         let lastElement = sessions|> Map.toList |> List.head
         let sessionId = fst lastElement       
@@ -38,7 +42,7 @@ module Server =
 
     [<Rpc>]
     let CurrentUserData (userEmail: string) =
-        let loginUser = DatabaseSearch.SearchForUsersData userEmail
+        let loginUser = DatabaseSearch.SearchForUsersData (userEmail)
 
 
         async {            
@@ -86,9 +90,9 @@ module Server =
         async {
             let newCar =
                 if userPermission = "2" then
-                    DatabaseSearch.GetAllCarData
+                    DatabaseSearch.GetAllCarData()
                 else
-                    DatabaseSearch.GetCarData userEMail
+                    DatabaseSearch.GetCarData (userEMail)
             return newCar
         }
     
@@ -157,7 +161,7 @@ module Server =
     [<Rpc>]
     let UpdateUser (currentUser: UserData) =  
     
-        let dataBaseResponse = UpdatingDatabase.UpdateUserData currentUser
+        let dataBaseResponse = UpdatingDatabase.UpdateUserData (currentUser)
         let returnValue =
             match dataBaseResponse with                    
             | a when a > 0 ->  "Data successfully updated."

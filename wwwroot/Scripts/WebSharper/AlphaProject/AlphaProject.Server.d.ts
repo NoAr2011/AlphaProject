@@ -15,3 +15,4 @@ export function RegisterNewUser(userData:{main_id:string,family_name:string,firs
 export function CurrentUserData(userEmail:string):FSharpAsync<{main_id:string,family_name:string,first_name:string,password:string,permission:BigInt,phone_number:string,email:string,city:string,street:string,house_number:string,floor_door:string}>
 export function CurrentUser(password:string, email:string):FSharpAsync<FSharpOption<string>>
 export function ReturnSessionId():FSharpAsync<string>
+export function EnableParallelWrite():void

@@ -107,12 +107,11 @@ module UpdatingDatabase =
 
         connection.Close()
      
-    let UpdateUserData (curretnUser : UserData)=
-        use connection = new SQLiteConnection(DataBaseConnection.dbFile)        
-        
-        connection.Open()  
-
+    let UpdateUserData (curretnUser : UserData)=       
         try
+            use connection = new SQLiteConnection(DataBaseConnection.dbFile)        
+        
+            connection.Open()  
 
             let updateQuery = """
                 Update User_table 
@@ -145,8 +144,7 @@ module UpdatingDatabase =
             returnValue 
            
         with
-        | ex -> 
-            connection.Close()
+        | ex ->             
             let filePath = "errorLog.txt"
             
             File.WriteAllText(filePath, ex.Message)
