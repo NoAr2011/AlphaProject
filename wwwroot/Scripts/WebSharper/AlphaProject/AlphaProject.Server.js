@@ -1,7 +1,28 @@
 import { Bind, Return } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
 import AjaxRemotingProvider from "../WebSharper.StdLib/WebSharper.Remoting.AjaxRemotingProvider.js"
-import { EncodeJson_UserData, DecodeJson_RepairStatus, DecodeJson_FailureCost, EncodeJson_CarJoinedData, DecodeJson_CarJoinedData, DecodeJson_FSharpOption_1, DecodeJson_UserData } from "./$Generated.js"
 import { DecodeList } from "../WebSharper.Web/WebSharper.ClientSideJson.Provider.js"
+import { DecodeJson_CarJoinedData, EncodeJson_CarJoinedData, EncodeJson_UserData, DecodeJson_RepairStatus, DecodeJson_FailureCost, DecodeJson_FSharpOption_1, DecodeJson_UserData } from "./$Generated.js"
+export function GetCarFromArchive(carLicence){
+  return Bind((new AjaxRemotingProvider()).Async("Server/GetCarFromArchive", [carLicence]), (o) => Return(((DecodeList(DecodeJson_CarJoinedData))())(o)));
+}
+export function GetUserEmail(carLicence){
+  return Bind((new AjaxRemotingProvider()).Async("Server/GetUserEmail", [carLicence]), (o) => Return(o));
+}
+export function DeleteCarFromDatabase(carLicence){
+  return Bind((new AjaxRemotingProvider()).Async("Server/DeleteCarFromDatabase", [carLicence]), (o) => Return(o));
+}
+export function InsertIntoArchive(carData, userEmail){
+  return Bind((new AjaxRemotingProvider()).Async("Server/InsertIntoArchive", [(EncodeJson_CarJoinedData())(carData), userEmail]), (o) => Return(o));
+}
+export function InserNewMalfunction(failureName, failureDesc, failureCost){
+  return Bind((new AjaxRemotingProvider()).Async("Server/InserNewMalfunction", [failureName, failureDesc, failureCost]), (o) => Return(o));
+}
+export function UpdateRepairCost(carLicence, currantCost){
+  return Bind((new AjaxRemotingProvider()).Async("Server/UpdateRepairCost", [carLicence, currantCost]), (o) => Return(o));
+}
+export function UpdateCarMalfunction(carLicence, carMalfunction){
+  return Bind((new AjaxRemotingProvider()).Async("Server/UpdateCarMalfunction", [carLicence, carMalfunction]), (o) => Return(o));
+}
 export function UpdateCarStatus(carLicence, carStatus){
   return Bind((new AjaxRemotingProvider()).Async("Server/UpdateCarStatus", [carLicence, carStatus]), (o) => Return(o));
 }

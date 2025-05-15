@@ -214,18 +214,7 @@ module Client =
                 menuEmail.SetAttribute("style", "visibility: visible")
                 menuEmail.TextContent <- userEmail.Value
 
-            let faulureSelect = JS.Document.GetElementById("failure") :?> HTMLSelectElement           
-
-            async{
-                    let! failureOptions = Server.GetFailureNames()
-
-                    failureData.AppendMany failureOptions
-                    
-                    for value in failureData do
-                        let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
-                        opt.Value <- value.failure_name.ToString()
-                        opt.Text <- value.failure_name.ToString()
-                        faulureSelect.AppendChild(opt) |> ignore
+                async{
 
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
@@ -233,6 +222,31 @@ module Client =
                     if userPermission.Value = "2" then
                         let statusEmail = JS.Document.GetElementById("StatusChange")
                         statusEmail.SetAttribute("style", "visibility: visible")
+
+                }
+                |> Async.StartImmediate
+            else
+                userPermission := "4"
+
+            let faulureSelect = JS.Document.GetElementById("failure") :?> HTMLSelectElement           
+
+            async{
+                    let! failureOptions = Server.GetFailureNames()
+
+                    failureData.AppendMany failureOptions
+
+                    let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
+                    opt.Value <- ""
+                    opt.Text <- ""
+                    faulureSelect.AppendChild(opt) |> ignore 
+                    
+                    for value in failureData do
+                        let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
+                        opt.Value <- value.failure_name.ToString()
+                        opt.Text <- value.failure_name.ToString()
+                        faulureSelect.AppendChild(opt) |> ignore     
+
+
                     }
                     |> Async.StartImmediate
             ) 0 |> ignore         
@@ -260,7 +274,7 @@ module Client =
                         let newCar : CarJoinedData =
                             {                        
                             car_licence = StringValidation.removeForbiddenCharacters e.Vars.licence.Value
-                            user_id = int64 userId
+                            user_id = userId
                             manuf = StringValidation.removeForbiddenCharacters e.Vars.manuf.Value
                             c_type = StringValidation.removeForbiddenCharacters e.Vars.c_type.Value
                             m_year = int64 e.Vars.m_year.Value                         
@@ -273,7 +287,7 @@ module Client =
                             let isNonEmpty (s: string) = not (String.IsNullOrWhiteSpace s)    
                         
                             isNonEmpty car.car_licence &&
-                            car.user_id > 0L &&
+                            isNonEmpty car.user_id &&
                             isNonEmpty car.c_type &&
                             car.m_year > 1900L &&     
                             isNonEmpty car.manuf &&
@@ -309,7 +323,7 @@ module Client =
                     match failureCost with
                     | Some failure -> failure.repair_costs
                     | None -> 0.0
-
+                 e.Vars.repair_cost.Value <- repairCost
                  JS.SetTimeout (fun () ->
                     
                     let costInput = JS.Document.GetElementById("repair_cost") :?> HTMLInputElement
@@ -333,10 +347,6 @@ module Client =
                 let menuEmail = JS.Document.GetElementById("LoginEmail")   
                 menuEmail.SetAttribute("style", "visibility: visible")
                 menuEmail.TextContent <- userEmail.Value
-
-            if userEmail.Value = "" || userEmail.Value = null then
-                userPermission := "4"
-            else
                 async {
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
@@ -346,7 +356,11 @@ module Client =
                         statusEmail.SetAttribute("style", "visibility: visible")
 
                 }
-                |> Async.StartImmediate       
+                |> Async.StartImmediate 
+
+            else
+                userPermission := "4"          
+                      
 
         ) 0 |> ignore         
         
@@ -528,12 +542,13 @@ module Client =
 
      let ChangeStatus () =
         let carData: CarsJoinedData = ListModel.Create (fun item -> item.car_licence) [] 
-          
-        let userPermission = Var.Create ""
+        let failureData: FailureCosts = ListModel.Create(fun item -> item.failure_name)[]         
         let statusData: RepairStatuses = ListModel.Create(fun item -> item.status_name)[]
+        let searchEmail = Var.Create ""
 
         JS.SetTimeout (fun () ->                                  
-            let faulureSelect = JS.Document.GetElementById("status") :?> HTMLSelectElement
+            let statusSelect = JS.Document.GetElementById("status") :?> HTMLSelectElement
+            let faulureSelect = JS.Document.GetElementById("failure") :?> HTMLSelectElement
 
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
@@ -546,59 +561,177 @@ module Client =
                 let! statusOptions = Server.GetStatusNames()
 
                 statusData.AppendMany statusOptions
+
+                let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
+                opt.Value <- ""
+                opt.Text <- ""
+                statusSelect.AppendChild(opt) |> ignore
                     
                 for value in statusData do
                     let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
                     opt.Value <- value.status_name
                     opt.Text <- value.status_name
-                    faulureSelect.AppendChild(opt) |> ignore                           
+                    statusSelect.AppendChild(opt) |> ignore                    
+
+                let! failureOptions = Server.GetFailureNames()
+
+                failureData.AppendMany failureOptions
+                    
+                let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
+                opt.Value <- ""
+                opt.Text <- ""
+                faulureSelect.AppendChild(opt) |> ignore
+
+                for value in failureData do
+                    let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
+                    opt.Value <- value.failure_name.ToString()
+                    opt.Text <- value.failure_name.ToString()
+                    faulureSelect.AppendChild(opt) |> ignore             
             }
             |>Async.StartImmediate
         ) 0 |> ignore 
         
-
         Templates.StatusChange.MainForm()
-            .OnClick(fun e ->
+            .SearchDatabase(fun e ->
                 async{
+                    let allSelects = JS.Document.QuerySelectorAll("select")
+                    for i = 0 to allSelects.Length - 1 do
+                        let sel = allSelects.[i] :?> HTMLSelectElement
+                        sel.RemoveAttribute("disabled") 
+
+                    let submitButton = JS.Document.GetElementById("submitButton")
+                    submitButton.RemoveAttribute("disabled") 
+
+                    let updateButton = JS.Document.GetElementById("updateButton")
+                    updateButton.RemoveAttribute("disabled") 
+
                     let! sessionIdResponse = Server.ReturnSessionId()  
                     sessionId.Value <- sessionIdResponse
 
                     let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
                      
                     if sessionChek = sessionId.Value then 
-                        let! res = Server.GetCarByid e.Vars.Licence.Value                        
-                        carData.AppendMany res                  
+                        let! res = Server.GetCarByid e.Vars.searchLicence.Value   
+                        let! emailRes = Server.GetUserEmail e.Vars.searchLicence.Value
+                        searchEmail:= emailRes                         
+
+                        carData.AppendMany res   
+                                                                                                              
                 }
                 |>Async.StartImmediate
-            
             
             )
             .ListContainer(
                 carData.View.DocSeqCached(fun (item: CarJoinedData) ->
-                    Templates.CStatusTemplate.ListItem()
-                        .license(item.car_licence)                        
+                    Templates.StatusChange.ListItem()
+                        .licence(item.car_licence)                        
                         .manuf(item.manuf)
                         .c_type(item.c_type)
                         .m_year(item.m_year.ToString())
                         .failure(item.failure) 
                         .repair_cost(item.repair_costs.ToString())
                         .repair_status(item.repair_status)
+                        .user_email(searchEmail.Value)
                         .Doc()                
                 )
             )      
+            .OnChange(fun e ->               
+                 
+                 let failureName = e.Vars.failure.Value               
+                 
+                 let failureCost =
+                    failureData |> Seq.tryFind (fun item -> item.failure_name = failureName)
+
+                 let repairCost =
+                    match failureCost with
+                    | Some failure -> failure.repair_costs
+                    | None -> 0.0
+                 e.Vars.repair_cost.Value <- repairCost
+                 JS.SetTimeout (fun () ->
+                    
+                    let costInput = JS.Document.GetElementById("repair_cost") :?> HTMLInputElement
+                    costInput.Value <- repairCost.ToString()
+                    
+                 ) 0 |> ignore            
+
+            )
             .OnSubmit(fun e ->
                 async{
-                    
                     let currentStatus = e.Vars.status.Value
-                    let licence = e.Vars.Licence.Value
+                    let licence = e.Vars.searchLicence.Value
 
                     let! res = Server.UpdateCarStatus licence currentStatus
+
+                    if currentStatus = "Handover" then
+                        let archiveCar:CarJoinedData = carData.Value |> Seq.head                       
+
+
+                        let! archiveResponse = Server.InsertIntoArchive(archiveCar, searchEmail.Value)
+                        let! deleteFromCars = Server.DeleteCarFromDatabase licence                     
+
+                        JS.Alert(archiveResponse)
+                        JS.Alert(deleteFromCars)
+
                     JS.Alert(res.ToString()) 
-                    JS.Window.Location.Reload()
+                    JS.Window.Location.Reload()              
 
                 }
                 |>Async.StartImmediate
             
-            )           
+            )   
+            .OnUpdate(fun e ->
+                async{                  
 
+                    let currentMalf = e.Vars.failure.Value
+                    let licence = e.Vars.searchLicence.Value
+                    let currentCost = e.Vars.repair_cost.Value
+
+                    let! failureRes = Server.UpdateCarMalfunction licence currentMalf
+
+                    JS.Alert(failureRes.ToString()) 
+
+                    let! costRes = Server.UpdateRepairCost licence currentCost
+
+                    JS.Alert(costRes.ToString())  
+
+                }
+                |>Async.StartImmediate                        
+            )
+            .OnSave(fun e ->
+                async{                   
+                    
+                    let newFailureName = e.Vars.failureName.Value
+                    let newDesc = e.Vars.failureDesc.Value
+                    let newCost = e.Vars.failureCost.Value
+                    if newFailureName <> "" && newDesc <> "" && newCost > 0.0 then
+                        let! insertRes = Server.InserNewMalfunction (newFailureName, newDesc, newCost)
+
+                        JS.Alert(insertRes.ToString()) 
+                        JS.Window.Location.Reload()  
+                    else
+                        JS.Alert("Please Fill in all fields!")
+                }
+                |>Async.StartImmediate                        
+            )
+            .SearchArchive(fun e ->
+                async{ 
+                    let! res = Server.GetCarFromArchive e.Vars.searchLicence.Value   
+
+                    carData.AppendMany res   
+                    searchEmail:= res.Head.user_id
+                    
+                    let allSelects = JS.Document.QuerySelectorAll("select")
+                    for i = 0 to allSelects.Length - 1 do
+                        let sel = allSelects.[i] :?> HTMLSelectElement
+                        sel.SetAttribute("disabled", "")    
+
+                    let submitButton = JS.Document.GetElementById("submitButton")
+                    submitButton.SetAttribute("disabled", "") 
+
+                    let updateButton = JS.Document.GetElementById("updateButton")
+                    updateButton.SetAttribute("disabled", "")
+
+                }
+                |>Async.StartImmediate
+            )            
             .Doc()

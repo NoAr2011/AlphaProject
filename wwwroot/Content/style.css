@@ -58,6 +58,15 @@ option
 }
 
 
+.carInput select
+{
+	
+	width: 100%;
+	
+}
+
+
+
 label 
 {
 	
@@ -238,4 +247,149 @@ p
 {
 	visibility: hidden;    
 	
+}
+
+.ListHeaderStaff
+{
+	ist-style-type: none;
+	padding: 0;
+	margin: 10;
+	background-color: lightgreen;
+
+}
+
+.ListHeaderStaff li
+{
+	display: inline-block;
+	width: calc(11.5% - 15px);	 
+	margin-left: 15px; 
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+.dataDisplayStaff
+{
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	border: 1px solid #ccc;
+    border-radius: 10px;
+
+}
+
+.dataDisplayStaff li
+{
+	
+	display: inline-block;
+	width: calc(11.5% - 15px);	 
+	margin-left: 15px; 
+	margin-bottom: 10px;
+	
+
+}
+
+.SearchDiv
+{
+	display: flex;
+    justify-content: space-between; 
+    gap: 1rem;	
+	border-bottom: 1px solid gray;
+	padding: 16px;
+	
+}
+
+.SearchDiv button
+{
+	
+	width: 30%;
+	
+}
+
+.SearchDiv div
+{
+	
+	width: 30%;
+	
+}
+
+.SearchDiv label
+{
+	font-size: 1.5rem;
+	font-weight: bold;
+	
+	
+}
+
+.StatusMalf
+{
+	display: flex;
+    justify-content: space-between; 
+    gap: 1rem;	
+	border-bottom: 1px solid gray;
+	padding: 16px;
+	
+}
+
+.StatusDiv
+{
+	width: 40%;
+	
+}
+
+.StatusDiv select
+{
+	width: 100%;
+	
+}
+
+.MalfDiv
+{
+	
+	width: 60%;
+}
+
+.MalfInputs
+{
+	display: flex;
+    justify-content: space-between; 
+    gap: 1rem;	
+	
+	
+}
+
+.MalfInputs div
+{
+	width: 50%;
+	
+}
+.FDiv select
+{
+	width: 100%;
+	
+}
+.Malfcost input
+{
+	width: 100%;
+	
+}
+
+.NewMalfInputs
+{
+	display: flex;
+    justify-content: space-between; 
+    gap: 1rem;	
+	
+	
+}
+
+.NewMalfInputs div
+{
+	
+	width: 30%;
+}
+
+.NewMalfunctions
+{
+	border-bottom: 1px solid gray;
+	padding: 16px;
 }

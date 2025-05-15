@@ -20,8 +20,8 @@
     </nav>
     <div class="container m-2 p-2">
       <div ws-replace="Body">
-        <div ws-template="MainForm" class = "MainDiv">
-			<ul class="ListHeader">
+        <div ws-template="MainForm">
+			<ul class="ListHeaderStaff">
 					<li>License</li>
 					<li>Manufacturer</li>
 					<li>Car Type</li>
@@ -29,47 +29,98 @@
 					<li>Malfunction</li>
 					<li>Estimated Cost ($)</li>
 					<li>Repair Status</li>
+					<li>User email</li>
 
 				</ul>
 				
-				 <ul ws-hole="ListContainer" class="dataDisplay">			
+				 <ul ws-hole="ListContainer" class="dataDisplayStaff">			
 				 
 					 <ul ws-children-template ="ListItem" id = "CarList" class="CarDisplay"> 					
 					 
-						 <li class = "item">${license}</li>
+						 <li class = "item">${licence}</li>
 						 <li class = "item">${manuf}</li>
 						 <li class = "item">${c_type}</li>
 						 <li class = "item">${m_year}</li>
 						 <li class = "item">${failure}</li>
 						 <li class = "item">${repair_cost}</li>					
-						 <li class = "item">${repair_status}</li>					 
+						 <li class = "item">${repair_status}</li>	
+						 <li class = "item">${user_email}</li>						 
 						  
 					 </ul>
 
 			</ul> 		
 		
 		
-          <div class="carInput">
-				<label for="licence">Licence:</label>
-				<input ws-var="Licence" type="text" id="licence" name="licence">
-								
-				<button ws-onclick="OnClick">search Car</button>
+			<div>
+				<h1>Search for vehicle</h1>
+				<div class="SearchDiv">
+					<div>
+					<label for="licence">Licence:</label>
+					<input ws-var="searchLicence" type="text" id="licence" name="licence">
+					</div>		
+					<button ws-onclick="SearchDatabase">search Car</button>
+					<button ws-onclick="SearchArchive">search in archive</button>
+				</div>
 				
-			
 				
-	
-				<label for="status">Malfunction:</label>
-				<select ws-onchange="OnChange" ws-var="status" ws-children-template="FailureOptions" id="status" name="status" required>
-				
-					<option value="${Val}">${Text}</option>
-								
-				</select>
+					<h1>Change Repair Status</h1>
+				<div class="StatusMalf">
+					<div class="StatusDiv">
+						<label for="status">Repair status:</label>
+						<select ws-var="status" id="status" name="status" required>
+					
+							<option value="${Val}">${Text}</option>
+									
+						</select>
+					
+						<button ws-onclick="OnSubmit" id="submitButton">change status</button>
+					</div>
+					
+					<!--h1>Change Malfunction</h1-->
+					<div class="MalfDiv">
+						<div class="MalfInputs">
+							<div class="FDiv">
+								<label for="failure">Malfunction:</label>
+								<select ws-onchange="OnChange" ws-var="failure" id="failure" name="failure" required>
+						
+									<option value="${Val}">${Text}</option>
+										
+								</select>
+							</div>
+							<div class="Malfcost">
+						
+								<label for="repair_cost">Estimated Cost ($):</label>
+						
+								<input ws-var="repair_cost" type="number" id="repair_cost" name="repair_cost">	
+							</div>
+						</div>
+						<button ws-onclick="OnUpdate" id="updateButton">Change Malfunction</button>
+					
+					</div>
+					
+				</div>
+				<h1>Create New Malfunction</h1>
+				<div class="NewMalfunctions">
+					<div class="NewMalfInputs">				
+						<div>
+						<label for="failureName">Malfunction name</label>
+						<input ws-var="failureName" type="text" id="failureName" name="failureName">
+						</div>
+						
+						<div>
+						<label for="failureDesc">Malfunction description</label>
+						<input ws-var="failureDesc" type="text" id="failureDesc" name="failureDesc">
+						</div>
+						
+						<div>
+						<label for="failureCost">Malfunction cost</label>
+						<input ws-var="failureCost" type="number" id="failureCost" name="failureCost">					
+						</div>
 
-				<label for="repair_cost">Estimated Cost ($):</label>
-				
-				<input ws-var="repair_cost" type="number" id="repair_cost" name="repair_cost">				
-				
-				<button ws-onclick="OnSubmit">change status</button>
+					</div>
+					<button ws-onclick="OnSave">Save Malfunction</button>
+					
+				</div>
 			</div>  	
       </div>
     </div>

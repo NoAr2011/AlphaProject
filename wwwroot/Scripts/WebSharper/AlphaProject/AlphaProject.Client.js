@@ -1,28 +1,32 @@
 import { Create } from "../WebSharper.UI/WebSharper.UI.ListModel.js"
 import FSharpList from "../WebSharper.StdLib/Microsoft.FSharp.Collections.FSharpList`1.js"
 import Var from "../WebSharper.UI/WebSharper.UI.Var.js"
-import { StartImmediate, Delay, Bind, For, Zero, Combine } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
-import { GetStatusNames, ReturnSessionId, GetCarByid, UpdateCarStatus, CurrentUserData, GetUserPermission, UpdateUser, GetCarData, GetFailureNames, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser, EnableParallelWrite } from "./AlphaProject.Server.js"
+import { StartImmediate, Delay, Bind, Combine, For, Zero } from "../WebSharper.StdLib/WebSharper.Concurrency.js"
+import { GetStatusNames, GetFailureNames, ReturnSessionId, GetCarByid, GetUserEmail, UpdateCarStatus, InsertIntoArchive, DeleteCarFromDatabase, UpdateCarMalfunction, UpdateRepairCost, InserNewMalfunction, GetCarFromArchive, CurrentUserData, GetUserPermission, UpdateUser, GetCarData, CurrentUserId, InsertCarData, LogingInToDatabase, RegisterNewUser, EnableParallelWrite } from "./AlphaProject.Server.js"
 import Doc from "../WebSharper.UI/WebSharper.UI.Doc.js"
 import ProviderBuilder from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.ProviderBuilder.js"
 import Text from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Text.js"
 import { CompleteHoles, EventQ2 } from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.Handler.js"
 import TemplateInstance from "../WebSharper.UI.Templating.Runtime/WebSharper.UI.Templating.Runtime.Server.TemplateInstance.js"
-import { listitem, mainform, mainform_1, mainform_2, mainform_3, mainform_4, mainform_5, mainform_6 } from "./$Generated.js"
+import { listitem, mainform, mainform_1, listitem_1, mainform_2, mainform_3, mainform_4, mainform_5, mainform_6 } from "./$Generated.js"
+import { range } from "../WebSharper.StdLib/Microsoft.FSharp.Core.Operators.js"
 import TemplateHole from "../WebSharper.UI/WebSharper.UI.TemplateHole.js"
 import Elt from "../WebSharper.UI/WebSharper.UI.TemplateHoleModule.Elt.js"
+import { tryFind, head } from "../WebSharper.StdLib/Microsoft.FSharp.Collections.SeqModule.js"
+import { head as head_1 } from "../WebSharper.StdLib/Microsoft.FSharp.Collections.ListModule.js"
 import { removeForbiddenCharacters } from "./AlphaProject.StringValidation.js"
 import { IsNullOrWhiteSpace } from "../WebSharper.StdLib/Microsoft.FSharp.Core.StringModule.js"
 import { Get } from "../WebSharper.StdLib/WebSharper.Enumerator.js"
 import { isIDisposable } from "../WebSharper.StdLib/System.IDisposable.js"
-import { tryFind } from "../WebSharper.StdLib/Microsoft.FSharp.Collections.SeqModule.js"
 import $StartupCode_Client from "./$StartupCode_Client.js"
 export function ChangeStatus(){
   const carData=Create((item) => item.car_licence, FSharpList.Empty);
-  Var.Create_1("");
+  const failureData=Create((item) => item.failure_name, FSharpList.Empty);
   const statusData=Create((item) => item.status_name, FSharpList.Empty);
+  const searchEmail=Var.Create_1("");
   setTimeout(() => {
-    const faulureSelect=globalThis.document.getElementById("status");
+    const statusSelect=globalThis.document.getElementById("status");
+    const faulureSelect=globalThis.document.getElementById("failure");
     userEmail().Set(globalThis.sessionStorage.getItem("userEmail"));
     if(userEmail().Get()!=""&&userEmail().Get()!=null){
       const menuEmail=globalThis.document.getElementById("LoginEmail");
@@ -32,53 +36,141 @@ export function ChangeStatus(){
     const _2=null;
     StartImmediate(Delay(() => Bind(GetStatusNames(), (a) => {
       statusData.AppendMany(a);
-      return For(statusData, (a_1) => {
-        const opt=globalThis.document.createElement("option");
-        opt.value=a_1.status_name;
-        opt.text=a_1.status_name;
-        faulureSelect.appendChild(opt);
+      const opt=globalThis.document.createElement("option");
+      opt.value="";
+      opt.text="";
+      statusSelect.appendChild(opt);
+      return Combine(For(statusData, (a_1) => {
+        const opt_1=globalThis.document.createElement("option");
+        opt_1.value=a_1.status_name;
+        opt_1.text=a_1.status_name;
+        statusSelect.appendChild(opt_1);
         return Zero();
-      });
+      }), Delay(() => Bind(GetFailureNames(), (a_1) => {
+        failureData.AppendMany(a_1);
+        const opt_1=globalThis.document.createElement("option");
+        opt_1.value="";
+        opt_1.text="";
+        faulureSelect.appendChild(opt_1);
+        return For(failureData, (a_2) => {
+          const opt_2=globalThis.document.createElement("option");
+          opt_2.value=String(a_2.failure_name);
+          opt_2.text=String(a_2.failure_name);
+          faulureSelect.appendChild(opt_2);
+          return Zero();
+        });
+      })));
     })), null);
   }, 0);
   const L=Doc.Convert((item) => {
+    const u=searchEmail.Get();
     const this_2=new ProviderBuilder("New_1");
-    const this_3=(this_2.h.push(new Text("license", item.car_licence)),this_2);
+    const this_3=(this_2.h.push(new Text("licence", item.car_licence)),this_2);
     const this_4=(this_3.h.push(new Text("manuf", item.manuf)),this_3);
     const this_5=(this_4.h.push(new Text("c_type", item.c_type)),this_4);
     const this_6=(this_5.h.push(new Text("m_year", String(item.m_year))),this_5);
     const this_7=(this_6.h.push(new Text("failure", item.failure)),this_6);
     const this_8=(this_7.h.push(new Text("repair_cost", String(item.repair_costs))),this_7);
-    const b_1=(this_8.h.push(new Text("repair_status", item.repair_status)),this_8);
+    const this_9=(this_8.h.push(new Text("repair_status", item.repair_status)),this_8);
+    const b_1=(this_9.h.push(new Text("user_email", u)),this_9);
     const p_1=CompleteHoles(b_1.k, b_1.h, []);
     const i_1=new TemplateInstance(p_1[1], listitem(p_1[0]));
     let _2=(b_1.i=i_1,i_1);
     return _2.Doc;
   }, carData.v);
   const t=new ProviderBuilder("New_1");
-  const this_1=(t.h.push(EventQ2(t.k, "onclick", () => t.i, (e) => {
+  const this_1=(t.h.push(EventQ2(t.k, "searchdatabase", () => t.i, (e) => {
     const _2=null;
-    StartImmediate(Delay(() => Bind(ReturnSessionId(), (a) => {
-      sessionId().Set(a);
-      return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?Bind(GetCarByid(TemplateHole.Value(e.Vars.Hole("licence")).Get()), (a_1) => {
-        carData.AppendMany(a_1);
+    StartImmediate(Delay(() => {
+      const allSelects=globalThis.document.querySelectorAll("select");
+      return Combine(For(range(0, allSelects.length-1), (a) => {
+        allSelects[a].removeAttribute("disabled");
         return Zero();
-      }):Zero();
-    })), null);
+      }), Delay(() => {
+        globalThis.document.getElementById("submitButton").removeAttribute("disabled");
+        globalThis.document.getElementById("updateButton").removeAttribute("disabled");
+        return Bind(ReturnSessionId(), (a) => {
+          sessionId().Set(a);
+          return globalThis.sessionStorage.getItem("sessionId")==sessionId().Get()?Bind(GetCarByid(TemplateHole.Value(e.Vars.Hole("searchlicence")).Get()), (a_1) => Bind(GetUserEmail(TemplateHole.Value(e.Vars.Hole("searchlicence")).Get()), (a_2) => {
+            searchEmail.Set(a_2);
+            carData.AppendMany(a_1);
+            return Zero();
+          })):Zero();
+        });
+      }));
+    }), null);
   })),t);
   const t_1=(this_1.h.push(new Elt("listcontainer", L)),this_1);
-  const b=(t_1.h.push(EventQ2(t_1.k, "onsubmit", () => t_1.i, (e) => {
+  const t_2=(t_1.h.push(EventQ2(t_1.k, "onchange", () => t_1.i, (e) => {
+    const failureName=TemplateHole.Value(e.Vars.Hole("failure")).Get();
+    const failureCost=tryFind((item) => item.failure_name==failureName, failureData);
+    const repairCost=failureCost==null?0:failureCost.$0.repair_costs;
+    TemplateHole.Value(e.Vars.Hole("repair_cost")).Set(repairCost);
+    setTimeout(() => {
+      globalThis.document.getElementById("repair_cost").value=String(repairCost);
+    }, 0);
+  })),t_1);
+  const t_3=(t_2.h.push(EventQ2(t_2.k, "onsubmit", () => t_2.i, (e) => {
     const _2=null;
     StartImmediate(Delay(() => {
       const currentStatus=TemplateHole.Value(e.Vars.Hole("status")).Get();
-      return Bind(UpdateCarStatus(TemplateHole.Value(e.Vars.Hole("licence")).Get(), currentStatus), (a) => {
+      const licence=TemplateHole.Value(e.Vars.Hole("searchlicence")).Get();
+      return Bind(UpdateCarStatus(licence, currentStatus), (a) => Combine(currentStatus=="Handover"?Bind(InsertIntoArchive(head(carData.u0076ar.Get()), searchEmail.Get()), (a_1) => Bind(DeleteCarFromDatabase(licence), (a_2) => {
+        alert(a_1);
+        alert(a_2);
+        return Zero();
+      })):Zero(), Delay(() => {
         alert(String(a));
         globalThis.location.reload();
         return Zero();
+      })));
+    }), null);
+  })),t_2);
+  const t_4=(t_3.h.push(EventQ2(t_3.k, "onupdate", () => t_3.i, (e) => {
+    const _2=null;
+    StartImmediate(Delay(() => {
+      const currentMalf=TemplateHole.Value(e.Vars.Hole("failure")).Get();
+      const licence=TemplateHole.Value(e.Vars.Hole("searchlicence")).Get();
+      const currentCost=TemplateHole.Value(e.Vars.Hole("repair_cost")).Get();
+      return Bind(UpdateCarMalfunction(licence, currentMalf), (a) => {
+        alert(String(a));
+        return Bind(UpdateRepairCost(licence, currentCost), (a_1) => {
+          alert(String(a_1));
+          return Zero();
+        });
       });
     }), null);
-  })),t_1);
-  const p=CompleteHoles(b.k, b.h, [["licence", 0, null], ["status", 0, null], ["repair_cost", 1, null]]);
+  })),t_3);
+  const t_5=(t_4.h.push(EventQ2(t_4.k, "onsave", () => t_4.i, (e) => {
+    const _2=null;
+    StartImmediate(Delay(() => {
+      const newFailureName=TemplateHole.Value(e.Vars.Hole("failurename")).Get();
+      const newDesc=TemplateHole.Value(e.Vars.Hole("failuredesc")).Get();
+      const newCost=TemplateHole.Value(e.Vars.Hole("failurecost")).Get();
+      return newFailureName!=""&&newDesc!=""&&newCost>0?Bind(InserNewMalfunction(newFailureName, newDesc, newCost), (a) => {
+        alert(String(a));
+        globalThis.location.reload();
+        return Zero();
+      }):(alert("Please Fill in all fields!"),Zero());
+    }), null);
+  })),t_4);
+  const b=(t_5.h.push(EventQ2(t_5.k, "searcharchive", () => t_5.i, (e) => {
+    const _2=null;
+    StartImmediate(Delay(() => Bind(GetCarFromArchive(TemplateHole.Value(e.Vars.Hole("searchlicence")).Get()), (a) => {
+      carData.AppendMany(a);
+      searchEmail.Set(head_1(a).user_id);
+      const allSelects=globalThis.document.querySelectorAll("select");
+      return Combine(For(range(0, allSelects.length-1), (a_1) => {
+        allSelects[a_1].setAttribute("disabled", "");
+        return Zero();
+      }), Delay(() => {
+        globalThis.document.getElementById("submitButton").setAttribute("disabled", "");
+        globalThis.document.getElementById("updateButton").setAttribute("disabled", "");
+        return Zero();
+      }));
+    })), null);
+  })),t_5);
+  const p=CompleteHoles(b.k, b.h, [["searchlicence", 0, null], ["status", 0, null], ["failure", 0, null], ["repair_cost", 1, null], ["failurename", 0, null], ["failuredesc", 0, null], ["failurecost", 1, null]]);
   const i=new TemplateInstance(p[1], mainform(p[0]));
   let _1=(b.i=i,i);
   return _1.Doc;
@@ -173,15 +265,13 @@ export function CarStatus(){
       const menuEmail=globalThis.document.getElementById("LoginEmail");
       menuEmail.setAttribute("style", "visibility: visible");
       menuEmail.textContent=userEmail().Get();
-    }
-    if(userEmail().Get()==""||userEmail().Get()==null)userPermission.Set("4");
-    else {
       const _2=null;
       StartImmediate(Delay(() => Bind(GetUserPermission(userEmail().Get()), (a) => {
         userPermission.Set(a);
         return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
       })), null);
     }
+    else userPermission.Set("4");
   }, 0);
   const L=Doc.Convert((item) => {
     const this_2=new ProviderBuilder("New_1");
@@ -193,7 +283,7 @@ export function CarStatus(){
     const this_8=(this_7.h.push(new Text("repair_cost", String(item.repair_costs))),this_7);
     const b_1=(this_8.h.push(new Text("repair_status", item.repair_status)),this_8);
     const p_1=CompleteHoles(b_1.k, b_1.h, []);
-    const i_1=new TemplateInstance(p_1[1], listitem(p_1[0]));
+    const i_1=new TemplateInstance(p_1[1], listitem_1(p_1[0]));
     let _2=(b_1.i=i_1,i_1);
     return _2.Doc;
   }, carData.v);
@@ -253,21 +343,28 @@ export function RegisterCar(){
       const menuEmail=globalThis.document.getElementById("LoginEmail");
       menuEmail.setAttribute("style", "visibility: visible");
       menuEmail.textContent=userEmail().Get();
+      const _2=null;
+      StartImmediate(Delay(() => Bind(GetUserPermission(userEmail().Get()), (a) => {
+        userPermission.Set(a);
+        return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
+      })), null);
     }
+    else userPermission.Set("4");
     const faulureSelect=globalThis.document.getElementById("failure");
-    const _2=null;
+    const _3=null;
     StartImmediate(Delay(() => Bind(GetFailureNames(), (a) => {
       failureData.AppendMany(a);
-      return Combine(For(failureData, (a_1) => {
-        const opt=globalThis.document.createElement("option");
-        opt.value=String(a_1.failure_name);
-        opt.text=String(a_1.failure_name);
-        faulureSelect.appendChild(opt);
+      const opt=globalThis.document.createElement("option");
+      opt.value="";
+      opt.text="";
+      faulureSelect.appendChild(opt);
+      return For(failureData, (a_1) => {
+        const opt_1=globalThis.document.createElement("option");
+        opt_1.value=String(a_1.failure_name);
+        opt_1.text=String(a_1.failure_name);
+        faulureSelect.appendChild(opt_1);
         return Zero();
-      }), Delay(() => Bind(GetUserPermission(userEmail().Get()), (a_1) => {
-        userPermission.Set(a_1);
-        return userPermission.Get()=="2"?(globalThis.document.getElementById("StatusChange").setAttribute("style", "visibility: visible"),Zero()):Zero();
-      })));
+      });
     })), null);
   }, 0);
   const t=new ProviderBuilder("New_1");
@@ -288,7 +385,7 @@ export function RegisterCar(){
           const m=removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("manuf")).Get());
           const newCar={
             car_licence:c, 
-            user_id:BigInt(a_1), 
+            user_id:a_1, 
             c_type:removeForbiddenCharacters(TemplateHole.Value(e.Vars.Hole("c_type")).Get()), 
             m_year:BigInt(Math.trunc(TemplateHole.Value(e.Vars.Hole("m_year")).Get())), 
             manuf:m, 
@@ -297,7 +394,7 @@ export function RegisterCar(){
             repair_status:"1"
           };
           const isNonEmpty=(s) =>!IsNullOrWhiteSpace(s);
-          let _4=isNonEmpty(newCar.car_licence)&&newCar.user_id>0n&&isNonEmpty(newCar.c_type)&&newCar.m_year>1900n&&isNonEmpty(newCar.manuf)&&isNonEmpty(newCar.failure)&&newCar.repair_costs>=0&&isNonEmpty(newCar.repair_status)?Bind(InsertCarData(newCar), (a_2) => {
+          let _4=isNonEmpty(newCar.car_licence)&&isNonEmpty(newCar.user_id)&&isNonEmpty(newCar.c_type)&&newCar.m_year>1900n&&isNonEmpty(newCar.manuf)&&isNonEmpty(newCar.failure)&&newCar.repair_costs>=0&&isNonEmpty(newCar.repair_status)?Bind(InsertCarData(newCar), (a_2) => {
             serverRespons.Set(a_2);
             return Zero();
           }):(serverRespons.Set("Please fill in all fields."),Zero());
@@ -314,6 +411,7 @@ export function RegisterCar(){
     const failureName=TemplateHole.Value(e.Vars.Hole("failure")).Get();
     const failureCost=tryFind((item) => item.failure_name==failureName, failureData);
     const repairCost=failureCost==null?0:failureCost.$0.repair_costs;
+    TemplateHole.Value(e.Vars.Hole("repair_cost")).Set(repairCost);
     setTimeout(() => {
       globalThis.document.getElementById("repair_cost").value=String(repairCost);
     }, 0);

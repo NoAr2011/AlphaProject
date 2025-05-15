@@ -47,7 +47,7 @@ module DatabaseSearch =
         
           
         let sqlQuery = $"""Select u.main_id, c.car_licence, c.c_type, c.m_year, c.manuf, 
-                f.failure_name, f.repair_costs, s.status_name, s.status_desc From
+                f.failure_name, c.repair_cost, s.status_name, s.status_desc From
                 User_table u Inner Join Cars_table c On u.main_id = c.user_id 
                 Left Join Failure_switch fs On fs.car_licence = c.car_licence 
                 Left Join Failure_costs f On f.main_id = fs.failure_id 
@@ -69,7 +69,7 @@ module DatabaseSearch =
                     car_licence = reader.GetString(1)                     
                     c_type = reader.GetString(2)
                     m_year = reader.GetInt64(3)
-                    user_id = reader.GetInt64(0)
+                    user_id = reader.GetInt64(0).ToString()
                     manuf = reader.GetString(4)
                     failure = reader.GetString(5)
                     repair_costs =reader.GetValue(6) :?> float
@@ -107,6 +107,42 @@ module DatabaseSearch =
         connection.Close()
 
         currentUserId
+    
+    let GetUserByCar(carLicence:string)=
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        connection.Open()        
+
+        let sqlQuery = $"Select email from User_table Where main_id = (Select user_id from Cars_table where car_licence = @carLicence)"
+
+        use cmd = new SQLiteCommand(sqlQuery, connection)    
+        cmd.Parameters.AddWithValue("@carLicence", carLicence) |> ignore
+        let reader = cmd.ExecuteScalar()                          
+
+        let userEmail =
+            if isNull reader then
+                "Nincs találat"
+            else
+                reader.ToString()   
+
+        connection.Close()
+
+        userEmail
+
+    let GetUserEmail (userId : int64) =     
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        connection.Open()        
+
+        let sqlQuery = $"Select email from User_table Where main_id = @userId"
+
+        use cmd = new SQLiteCommand(sqlQuery, connection)    
+        cmd.Parameters.AddWithValue("@userId", userId) |> ignore
+        let reader = cmd.ExecuteScalar()                          
+
+        let userEmail = reader.ToString()     
+
+        connection.Close()
+
+        userEmail
 
     let GetMalfunctions () =     
         use connection = new SQLiteConnection(DataBaseConnection.dbFile)
@@ -207,7 +243,7 @@ module DatabaseSearch =
         
           
         let sqlQuery = $"""SELECT u.main_id, c.car_licence, c.c_type, c.m_year, c.manuf, 
-                f.failure_name, f.repair_costs, s.status_name, s.status_desc FROM
+                f.failure_name, c.repair_cost, s.status_name, s.status_desc FROM
                 User_table u INNER JOIN Cars_table c ON u.main_id = c.user_id 
                 LEFT JOIN Failure_switch fs ON fs.car_licence = c.car_licence 
                 LEFT JOIN Failure_costs f ON f.main_id = fs.failure_id 
@@ -228,7 +264,7 @@ module DatabaseSearch =
                     car_licence = reader.GetString(1)                     
                     c_type = reader.GetString(2)
                     m_year = reader.GetInt64(3)
-                    user_id = reader.GetInt64(0)
+                    user_id = reader.GetInt64(0).ToString()
                     manuf = reader.GetString(4)
                     failure = reader.GetString(5)
                     repair_costs =reader.GetValue(6) :?> float
@@ -287,9 +323,9 @@ module DatabaseSearch =
         connection.Open()       
                   
         let sqlQuery = $"""Select u.main_id, c.car_licence, c.c_type, c.m_year, c.manuf, 
-                f.failure_name, f.repair_costs, s.status_name, s.status_desc From
+                f.failure_name, c.repair_cost, s.status_name, s.status_desc From
                 User_table u Inner Join Cars_table c On u.main_id = c.user_id 
-                Left Join Failure_switch fs On fs.car_licence = c.car_licence 
+                Left Join Failure_switch fs On fs.car_licence = c.car_licence  
                 Left Join Failure_costs f On f.main_id = fs.failure_id 
                 Left Join Failure_status_switch fss On fss.car_licence = c.car_licence 
                 Left Join Repair_statuses s On s.main_id = fss.status_id Where 
@@ -309,11 +345,53 @@ module DatabaseSearch =
                     car_licence = reader.GetString(1)                     
                     c_type = reader.GetString(2)
                     m_year = reader.GetInt64(3)
-                    user_id = reader.GetInt64(0)
+                    user_id = reader.GetInt64(0).ToString()
                     manuf = reader.GetString(4)
                     failure = reader.GetString(5)
                     repair_costs =reader.GetValue(6) :?> float
                     repair_status = reader.GetString(7)
+
+                }
+                                                
+                let tempList = [currentCar]
+                let return_list = tableData @ tempList
+
+                GetDataTable return_list
+                
+            else
+                tableData 
+                    
+        let emptyCars = []
+
+        let allCars = GetDataTable emptyCars                     
+        connection.Close()        
+        allCars   
+
+    let GetArchiveCar carLicence =        
+        use connection = new SQLiteConnection(DataBaseConnection.dbFile)
+        connection.Open()       
+                  
+        let sqlQuery = "Select * from Archive Where car_licence = @carLicence"      
+
+        use cmd = new SQLiteCommand(sqlQuery, connection)  
+        cmd.Parameters.AddWithValue("@carLicence", StringValidation.removeForbiddenCharacters carLicence) |> ignore
+        let reader = cmd.ExecuteReader()
+
+        let rec GetDataTable tableData=       
+      
+            if reader.Read() then           
+
+                let currentCar : CarJoinedData= 
+                    {
+
+                    car_licence = reader.GetString(1)                     
+                    c_type = reader.GetString(2)
+                    m_year = reader.GetInt64(3)                    
+                    manuf = reader.GetString(4)
+                    failure = reader.GetString(5)
+                    repair_costs =reader.GetValue(6) :?> float
+                    repair_status = ""
+                    user_id = reader.GetString(7)
 
                 }
                                                 

@@ -28,6 +28,7 @@ type Car =
         m_year : int64
         manuf : string      
         user_id : string 
+        repair_costs : float
     }  
 
 type FailureSwitch =
@@ -67,7 +68,7 @@ type Failure_switch =
 type CarJoinedData =
         {
         car_licence : string       
-        user_id : int64
+        user_id : string
         c_type : string
         m_year : int64
         manuf : string  

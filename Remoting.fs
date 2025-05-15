@@ -12,10 +12,15 @@ module Server =
         DataBaseConnection.ConnectToDatabase()
 
     [<Rpc>]
-    let ReturnSessionId()=        
-        let lastElement = sessions|> Map.toList |> List.head
-        let sessionId = fst lastElement       
-
+    let ReturnSessionId()=    
+    
+        let sessionId =
+            if sessions.Count>0 then
+                let lastElement = sessions|> Map.toList |> List.head
+                fst lastElement       
+            else
+                "0"
+            
         async{
             return sessionId 
         }
@@ -53,16 +58,11 @@ module Server =
 
     [<Rpc>]
     let RegisterNewUser (userData: UserData) =           
-        let serverResponse = UpdatingDatabase.AddUser(userData)       
-        
-        let returnValue =
-            match serverResponse with                    
-            | a when a > 0 ->  "Your registration is complete!"
-            | _ ->  "This email address already exists.!"   
+        let serverResponse = UpdatingDatabase.AddUser(userData)     
 
         async
             {
-            return returnValue   
+            return serverResponse   
         }
 
     [<Rpc>]
@@ -161,15 +161,11 @@ module Server =
     [<Rpc>]
     let UpdateUser (currentUser: UserData) =  
     
-        let dataBaseResponse = UpdatingDatabase.UpdateUserData (currentUser)
-        let returnValue =
-            match dataBaseResponse with                    
-            | a when a > 0 ->  "Data successfully updated."
-            | _ ->  "Something went wrong!"
+        let dataBaseResponse = UpdatingDatabase.UpdateUserData (currentUser)        
         
         async{
             
-            return returnValue
+            return dataBaseResponse
         
         }
 
@@ -178,4 +174,58 @@ module Server =
         let updateStatus = UpdatingDatabase.UpdateCarStatus carLicence carStatus
         async{
             return updateStatus
+        }
+
+    [<Rpc>]
+    let UpdateCarMalfunction (carLicence: string) (carMalfunction: string) =
+        let updateStatus = UpdatingDatabase.UpdateMalfunction carLicence carMalfunction
+        async{
+            return updateStatus
+        } 
+
+    [<Rpc>]
+    let UpdateRepairCost (carLicence: string) (currantCost: float) =
+        let updateStatus = UpdatingDatabase.UpdateRepairCost carLicence currantCost
+        async{
+            return updateStatus
+        } 
+
+    [<Rpc>]
+    let InserNewMalfunction(failureName, failureDesc, failureCost)=
+        let insertStatus = UpdatingDatabase.CreateNewMalfunctions (failureName, failureDesc, failureCost) 
+        async{
+            return insertStatus
+        } 
+
+    [<Rpc>]
+    let InsertIntoArchive(carData:CarJoinedData, userEmail: string)=
+        let inserIntoArchive = UpdatingDatabase.AddCarToArchive(carData, userEmail)
+        async{
+            return inserIntoArchive
+        }
+
+    [<Rpc>]
+    let DeleteCarFromDatabase (carLicence:string) =
+        let deletedFromCars = UpdatingDatabase.DeletCarFromDatabase(carLicence)
+        let deletedFromFailures = UpdatingDatabase.DeletCarFromFailureSwitch(carLicence)
+        let deletedFromstatuses = UpdatingDatabase.DeletCarFromStatusSwitch(carLicence)
+        async{
+            return deletedFromCars
+        }
+
+    [<Rpc>]
+    let GetUserEmail(carLicence:string) =
+        let userEmail = DatabaseSearch.GetUserByCar(carLicence)        
+
+        async{
+        
+            return userEmail
+        
+        }
+
+    [<Rpc>]
+    let GetCarFromArchive(carLicence:string) =
+        let carData = DatabaseSearch.GetArchiveCar(carLicence)
+        async{
+            return carData
         }
