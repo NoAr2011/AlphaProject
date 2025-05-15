@@ -18,7 +18,7 @@ Due to time constraints and my prior familiarity with MySQL and SQLite, I decide
 ## Live Demo
 
 Try the application live: [Hosted on Azure]https://autotrack-g3fqakhcddbzhqf3.northeurope-01.azurewebsites.net/
-This is my first time using Azure for hosting, and I encountered some major stability issues.  
+This is my first time using Azure for hosting, and I have experienced significant stability issues with the platform 
 If a part of the application doesn't seem to work, please try closing the browser tab and reopening it.
 
 ---
