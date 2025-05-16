@@ -24,26 +24,38 @@ module Client =
      let userEmail = Var.Create ""
      let password = Var.Create ""    
      let sessionId = Var.Create ""
+     let userPermission = Var.Create ""
+
+     let VerifyUser targetUserEmail =
+                  
+         // If there is a logged-in user, their email is stored in session storage,
+         // and a menu item with the stored email will appear in the menu.
+         let menuEmail = JS.Document.GetElementById("LoginEmail")   
+         menuEmail.SetAttribute("style", "visibility: visible")
+         menuEmail.TextContent <- targetUserEmail
+     
+     let VerifyPermission targetUserPerm =
+        // The logged-in user's permission is retrieved from the database,
+        // and it is checked whether the admin page is available for the user.
+        let statusEmail = JS.Document.GetElementById("StatusChange")
+        if targetUserPerm = "2" then            
+            statusEmail.SetAttribute("style", "visibility: visible")
+        else
+            statusEmail.SetAttribute("style", "visibility: hidden")
+
 
      let Main () =  
         Server.EnableParallelWrite()
-        
-        userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-        let userPermission = Var.Create ""
+        //Gets the stored email from the session storage and stores it in the userEmail variable
+        userEmail := JS.Window.SessionStorage.GetItem("userEmail")         
 
         if userEmail.Value <> "" && userEmail.Value <> null then
-            let menuEmail = JS.Document.GetElementById("LoginEmail")   
-            menuEmail.SetAttribute("style", "visibility: visible")
-            menuEmail.TextContent <- userEmail.Value
-
+            VerifyUser userEmail.Value            
 
             async{
                 let! perRes = Server.GetUserPermission userEmail.Value
                 userPermission := perRes
-
-                if userPermission.Value = "2" then
-                    let statusEmail = JS.Document.GetElementById("StatusChange")
-                    statusEmail.SetAttribute("style", "visibility: visible")
+                VerifyPermission userPermission.Value           
         
             }
             |>Async.StartImmediate
@@ -53,30 +65,24 @@ module Client =
             .Doc()
 
      let UserRegistration () =        
-        let serverRespons = Var.Create ""   
-        let userPermission = Var.Create ""
+        let serverRespons = Var.Create ""           
         
         JS.SetTimeout (fun () ->
-
+            //Gets the stored email from the session storage and stores it in the userEmail variable
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
-
+            
             if userEmail.Value <> "" && userEmail.Value <> null then
-                let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                menuEmail.SetAttribute("style", "visibility: visible")
-                menuEmail.TextContent <- userEmail.Value
+                VerifyUser userEmail.Value   
 
                 async{
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
 
-                    if userPermission.Value = "2" then
-                        let statusEmail = JS.Document.GetElementById("StatusChange")
-                        statusEmail.SetAttribute("style", "visibility: visible")
+                    VerifyPermission userPermission.Value
                 }
                 |> Async.StartImmediate
 
-        ) 0 |> ignore   
-        
+        ) 0 |> ignore           
 
         Templates.UserRegTemplate.MainForm()            
             .OnSubmit(fun e ->                
@@ -97,7 +103,7 @@ module Client =
                         permission = 4   
                         
                     }                   
-                    
+                    //Checking if all data is filled in
                     let isUserDataComplete (user: UserData) =
                         let isNonEmpty (s: string) = not (String.IsNullOrWhiteSpace s)    
                         
@@ -132,22 +138,18 @@ module Client =
             .Doc()
 
      let SingingIn () =      
-        let userPermission = Var.Create ""
+        
         JS.SetTimeout (fun () ->
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
             if userEmail.Value <> "" && userEmail.Value <> null then
-                let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                menuEmail.SetAttribute("style", "visibility: visible")
-                menuEmail.TextContent <- userEmail.Value
+                VerifyUser userEmail.Value   
 
                 async{
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
 
-                    if userPermission.Value = "2" then
-                        let statusEmail = JS.Document.GetElementById("StatusChange")
-                        statusEmail.SetAttribute("style", "visibility: visible")
+                    VerifyPermission userPermission.Value
                 }
                 |>Async.StartImmediate  
 
@@ -157,14 +159,23 @@ module Client =
             .OnSubmit(fun e ->
                 async{
                     JS.Window.SessionStorage.RemoveItem("userEmail")
+                    JS.Window.SessionStorage.RemoveItem("sessionId")
+
+                    userEmail := ""
+                    sessionId := ""
+
                     password := StringValidation.removeForbiddenCharacters e.Vars.Password.Value
                     userEmail := StringValidation.removeForbiddenCharacters e.Vars.Email.Value 
 
+                    //If a user could be found the session id will be stored on the server
                     let! result = Server.LogingInToDatabase password.Value userEmail.Value                    
 
                     match result with
                     | Some sid ->
-                        sessionId := sid                        
+                        sessionId := sid           
+                        
+                        //The session id and user email will be stored in the sessionstorage 
+                        //for verifikation
                         JS.Window.SessionStorage.SetItem("sessionId", sid)                            
 
                         JS.Window.SessionStorage.SetItem("userEmail", userEmail.Value)                                             
@@ -172,9 +183,7 @@ module Client =
                         JS.SetTimeout (fun () ->
                             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
-                            let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                            menuEmail.SetAttribute("style", "visibility: visible")
-                            menuEmail.TextContent <- userEmail.Value                  
+                            VerifyUser userEmail.Value                  
 
                         ) 0 |> ignore   
                         
@@ -182,9 +191,7 @@ module Client =
                         let! perRes = Server.GetUserPermission userEmail.Value
                         userPermission := perRes
 
-                        if userPermission.Value = "2" then
-                            let statusEmail = JS.Document.GetElementById("StatusChange")
-                            statusEmail.SetAttribute("style", "visibility: visible")
+                        VerifyPermission userPermission.Value
 
                         let welcomeMsg = $"Welcome: {userEmail.Value}"
                         JS.Alert(welcomeMsg)
@@ -200,8 +207,7 @@ module Client =
             )    
             .Doc()
 
-     let RegisterCar () =     
-        let userPermission = Var.Create ""
+     let RegisterCar () =             
         let failureData: FailureCosts = ListModel.Create(fun item -> item.failure_name)[] 
         let serverRespons = Var.Create ""
         
@@ -210,18 +216,14 @@ module Client =
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
             if userEmail.Value <> "" && userEmail.Value <> null then
-                let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                menuEmail.SetAttribute("style", "visibility: visible")
-                menuEmail.TextContent <- userEmail.Value
+                VerifyUser userEmail.Value   
 
                 async{
 
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
 
-                    if userPermission.Value = "2" then
-                        let statusEmail = JS.Document.GetElementById("StatusChange")
-                        statusEmail.SetAttribute("style", "visibility: visible")
+                    VerifyPermission userPermission.Value
 
                 }
                 |> Async.StartImmediate
@@ -235,18 +237,18 @@ module Client =
 
                     failureData.AppendMany failureOptions
 
+                    
                     let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
                     opt.Value <- ""
                     opt.Text <- ""
                     faulureSelect.AppendChild(opt) |> ignore 
-                    
+
+                    //Fills out the select options
                     for value in failureData do
                         let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
                         opt.Value <- value.failure_name.ToString()
                         opt.Text <- value.failure_name.ToString()
-                        faulureSelect.AppendChild(opt) |> ignore     
-
-
+                        faulureSelect.AppendChild(opt) |> ignore   
                     }
                     |> Async.StartImmediate
             ) 0 |> ignore         
@@ -259,9 +261,7 @@ module Client =
                     userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
                     if userEmail.Value <> "" then
-                        let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                        menuEmail.SetAttribute("style", "visibility: visible")
-                        menuEmail.TextContent <- userEmail.Value
+                        VerifyUser userEmail.Value   
 
                     sessionId.Value <- sessionIdResponse
 
@@ -283,6 +283,7 @@ module Client =
                             repair_status = "1"
                         }
 
+                        //Checking if all data for car registration are filled out
                         let isCarDataComplete (car: CarJoinedData) =
                             let isNonEmpty (s: string) = not (String.IsNullOrWhiteSpace s)    
                         
@@ -295,9 +296,9 @@ module Client =
                             car.repair_costs >= 0.0 &&
                             isNonEmpty car.repair_status                        
                     
-                        let verifiValue = isCarDataComplete newCar
+                        let verifyValue = isCarDataComplete newCar
 
-                        if verifiValue then
+                        if verifyValue then
                             let! res = Server.InsertCarData newCar
                             serverRespons := res                            
 
@@ -307,13 +308,12 @@ module Client =
 
                         JS.Alert(serverRespons.Value)   
                         JS.Window.Location.Reload()
-
                 }
                 |> Async.StartImmediate
 
             ) 
            .OnChange(fun e ->               
-                 
+                 //The cost of the repair is filled out based on the selected failure
                  let failureName = e.Vars.failure.Value               
                  
                  let failureCost =
@@ -337,24 +337,20 @@ module Client =
      let CarStatus () =    
         let carData: CarsJoinedData = ListModel.Create (fun item -> item.car_licence) [] 
         let statusData : RepairStatuses = ListModel.Create (fun item -> item.status_name) []
-        let serverRespons = Var.Create ""      
-        let userPermission = Var.Create ""
+        let serverRespons = Var.Create ""             
         
+        //Checking permission and user data
         JS.SetTimeout (fun () ->            
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
             if userEmail.Value <> "" && userEmail.Value <> null then
-                let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                menuEmail.SetAttribute("style", "visibility: visible")
-                menuEmail.TextContent <- userEmail.Value
+                VerifyUser userEmail.Value   
+
                 async {
                     let! perRes = Server.GetUserPermission userEmail.Value
                     userPermission := perRes
 
-                    if userPermission.Value = "2" then
-                        let statusEmail = JS.Document.GetElementById("StatusChange")
-                        statusEmail.SetAttribute("style", "visibility: visible")
-
+                    VerifyPermission userPermission.Value
                 }
                 |> Async.StartImmediate 
 
@@ -375,7 +371,10 @@ module Client =
                     let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
                      
                     if sessionChek = sessionId.Value then 
-                    
+                        //Gets the car data based on the user's email and permission. If the 
+                        //logged-in user has permission level 2, all registered car data will 
+                        //be added to the list.
+                        
                         userEmail := JS.Window.SessionStorage.GetItem("userEmail")
                         let! res = Server.GetCarData userEmail.Value userPermission.Value
                         serverRespons := res.ToString()
@@ -383,26 +382,7 @@ module Client =
 
                         let! statusOptions = Server.GetStatusNames()                    
 
-                        statusData.AppendMany statusOptions
-
-                        JS.SetTimeout (fun () ->
-                            let selects = JS.Document.QuerySelectorAll(".repair_dropdown")                       
-
-                            for i = 0 to selects.Length - 1 do
-                                let selectEl = selects.[i] :?> HTMLSelectElement   
-                            
-                                if userPermission.Value <> "2" then
-                                    selectEl.Disabled <- true
-                                else
-                                    selectEl.Disabled <- false 
-                                                       
-                                for value in statusData do  
-                                    let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
-                                    opt.Value <- value.status_name
-                                    opt.Text <- value.status_name                                  
-                                    selectEl.Append(opt) |>ignore                             
-
-                            ) 0 |> ignore 
+                        statusData.AppendMany statusOptions                       
                     
                 }
                 |> Async.StartImmediate
@@ -424,52 +404,46 @@ module Client =
            .Doc()
 
      let UserDataPage () =
-        let serverRespons = Var.Create ""   
-        let userPermission = Var.Create ""
+        let serverRespons = Var.Create ""           
 
         JS.SetTimeout (fun () ->
 
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
             if userEmail.Value <> "" && userEmail.Value <> null then
-                let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                menuEmail.SetAttribute("style", "visibility: visible")
-                menuEmail.TextContent <- userEmail.Value
+                VerifyUser userEmail.Value   
 
         ) 0 |> ignore        
 
         async {     
                 
-                    let! sessionIdResponse = Server.ReturnSessionId()  
-                    sessionId.Value <- sessionIdResponse
+             let! sessionIdResponse = Server.ReturnSessionId()  
+             sessionId.Value <- sessionIdResponse
+             let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
 
-                    let sessionChek = JS.Window.SessionStorage.GetItem("sessionId")  
+             if sessionChek = sessionId.Value then
+                let! currentUser = Server.CurrentUserData userEmail.Value                                              
 
-                    if sessionChek = sessionId.Value then
-                        let! currentUser = Server.CurrentUserData userEmail.Value                                              
+                //The input fields are filled with the currently logged-in user's data.
+                JS.SetTimeout (fun () ->
+                    let inputs = JS.Document.QuerySelectorAll("input")                                
 
-                        JS.SetTimeout (fun () ->
-                            let inputs = JS.Document.QuerySelectorAll("input")                                
-
-                            (inputs.Item 0 :?> HTMLInputElement).Value <- currentUser.first_name
-                            (inputs.Item 1 :?> HTMLInputElement).Value <- currentUser.family_name
-                            (inputs.Item 2 :?> HTMLInputElement).Value <- currentUser.phone_number
-                            (inputs.Item 3 :?> HTMLInputElement).Value <- currentUser.city
-                            (inputs.Item 4 :?> HTMLInputElement).Value <- currentUser.street
-                            (inputs.Item 5 :?> HTMLInputElement).Value <- currentUser.house_number
-                            (inputs.Item 6 :?> HTMLInputElement).Value <- currentUser.floor_door 
-
+                    (inputs.Item 0 :?> HTMLInputElement).Value <- currentUser.first_name
+                    (inputs.Item 1 :?> HTMLInputElement).Value <- currentUser.family_name
+                    (inputs.Item 2 :?> HTMLInputElement).Value <- currentUser.phone_number
+                    (inputs.Item 3 :?> HTMLInputElement).Value <- currentUser.city
+                    (inputs.Item 4 :?> HTMLInputElement).Value <- currentUser.street
+                    (inputs.Item 5 :?> HTMLInputElement).Value <- currentUser.house_number
+                    (inputs.Item 6 :?> HTMLInputElement).Value <- currentUser.floor_door 
                             
-                         ) 0 |> ignore
+                 ) 0 |> ignore
 
-                    let! perRes = Server.GetUserPermission userEmail.Value
-                    userPermission := perRes
+             let! perRes = Server.GetUserPermission userEmail.Value
+             userPermission := perRes
 
-                    if userPermission.Value = "2" then
-                        let statusEmail = JS.Document.GetElementById("StatusChange")
-                        statusEmail.SetAttribute("style", "visibility: visible")
-                }
-                |> Async.StartImmediate
+             VerifyPermission userPermission.Value
+             }
+             |> Async.StartImmediate
 
         Templates.UserPage.MainForm()
             .OnClick(fun e ->                
@@ -477,7 +451,8 @@ module Client =
                 for i in 0 .. allIputs.Length - 1 do
                     let input = allIputs.[i] :?> HTMLInputElement
                     input.RemoveAttribute("disabled")       
-                    
+                
+                //The users data is added to the variable values
                 e.Vars.FirstName.Value <- (allIputs.Item 0 :?> HTMLInputElement).Value
                 e.Vars.LastName.Value <- (allIputs.Item 1 :?> HTMLInputElement).Value
                 e.Vars.Phone.Value <- (allIputs.Item 2 :?> HTMLInputElement).Value
@@ -507,6 +482,7 @@ module Client =
                         
                     }                   
                     
+                    //Checking for empty fields
                     let isUserDataComplete (user: UserData) =
                         let isNonEmpty (s: string) = not (String.IsNullOrWhiteSpace s)    
                         
@@ -553,9 +529,7 @@ module Client =
             userEmail := JS.Window.SessionStorage.GetItem("userEmail")
 
             if userEmail.Value <> "" && userEmail.Value <> null then
-                let menuEmail = JS.Document.GetElementById("LoginEmail")   
-                menuEmail.SetAttribute("style", "visibility: visible")
-                menuEmail.TextContent <- userEmail.Value
+                VerifyUser userEmail.Value   
 
             async{
                 let! statusOptions = Server.GetStatusNames()
@@ -566,7 +540,8 @@ module Client =
                 opt.Value <- ""
                 opt.Text <- ""
                 statusSelect.AppendChild(opt) |> ignore
-                    
+                
+                //The status <option> tag is populated with data.
                 for value in statusData do
                     let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
                     opt.Value <- value.status_name
@@ -582,6 +557,7 @@ module Client =
                 opt.Text <- ""
                 faulureSelect.AppendChild(opt) |> ignore
 
+                //The failure <option> tag is populated with data.
                 for value in failureData do
                     let opt = JS.Document.CreateElement("option") :?> HTMLOptionElement
                     opt.Value <- value.failure_name.ToString()
@@ -598,7 +574,8 @@ module Client =
                     for i = 0 to allSelects.Length - 1 do
                         let sel = allSelects.[i] :?> HTMLSelectElement
                         sel.RemoveAttribute("disabled") 
-
+                    
+                    // Enables the buttons and <option> elements
                     let submitButton = JS.Document.GetElementById("submitButton")
                     submitButton.RemoveAttribute("disabled") 
 
@@ -636,7 +613,7 @@ module Client =
                 )
             )      
             .OnChange(fun e ->               
-                 
+                 // Updates the repair cost based on the selected failure
                  let failureName = e.Vars.failure.Value               
                  
                  let failureCost =
@@ -662,6 +639,9 @@ module Client =
 
                     let! res = Server.UpdateCarStatus licence currentStatus
 
+                    // If the "Handover" status is selected and the changes are submitted,
+                    // the car data will be transferred to the Archive table
+                    // and deleted from the other tables.
                     if currentStatus = "Handover" then
                         let archiveCar:CarJoinedData = carData.Value |> Seq.head                       
 
@@ -681,7 +661,7 @@ module Client =
             )   
             .OnUpdate(fun e ->
                 async{                  
-
+                    //Updates the failure for the car
                     let currentMalf = e.Vars.failure.Value
                     let licence = e.Vars.searchLicence.Value
                     let currentCost = e.Vars.repair_cost.Value
@@ -699,7 +679,7 @@ module Client =
             )
             .OnSave(fun e ->
                 async{                   
-                    
+                    //Creates the new failure
                     let newFailureName = e.Vars.failureName.Value
                     let newDesc = e.Vars.failureDesc.Value
                     let newCost = e.Vars.failureCost.Value
@@ -715,11 +695,14 @@ module Client =
             )
             .SearchArchive(fun e ->
                 async{ 
+
+                    //Gets the car data from the Archive table
                     let! res = Server.GetCarFromArchive e.Vars.searchLicence.Value   
 
                     carData.AppendMany res   
                     searchEmail:= res.Head.user_id
                     
+                    //Disables all the select and submit buttons
                     let allSelects = JS.Document.QuerySelectorAll("select")
                     for i = 0 to allSelects.Length - 1 do
                         let sel = allSelects.[i] :?> HTMLSelectElement

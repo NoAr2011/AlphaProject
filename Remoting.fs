@@ -40,21 +40,17 @@ module Server =
                 None
 
         async {
-            
-                    
+     
             return result
         }
 
     [<Rpc>]
     let CurrentUserData (userEmail: string) =
         let loginUser = DatabaseSearch.SearchForUsersData (userEmail)
-
-
         async {            
                     
             return loginUser
         }
-
 
     [<Rpc>]
     let RegisterNewUser (userData: UserData) =           
@@ -70,7 +66,7 @@ module Server =
         let currentUser = System.String(DatabaseSearch.SearchForUsers userPassword userEmail)
         let result = 
             if currentUser <>"No user found" && currentUser <> "" && currentUser <> null then 
-                
+                sessions <-Map.empty
                 let sessionId = System.Guid.NewGuid().ToString()
                 sessions <- sessions.Add(sessionId, userEmail)
                 Some sessionId
@@ -78,10 +74,8 @@ module Server =
              else
                 None        
 
-        async {            
-                    
-            return result           
-           
+        async {                         
+            return result               
         }
 
     [<Rpc>]

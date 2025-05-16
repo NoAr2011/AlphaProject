@@ -1,8 +1,7 @@
 ﻿namespace AlphaProject
 open System.IO
 open System.Data.SQLite
-open System.Security.Cryptography
-open System.Text
+
 
 module DatabaseSearch =     
 
